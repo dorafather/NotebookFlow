@@ -1,12 +1,16 @@
 # NotebookFlow
 
+<p align="center">
+  <img src="assets/NotebookFLOW.jpg" alt="NotebookFlow" width="240"/>
+</p>
+
 > 당신의 노트북이 모든 서비스를 지휘하는 오케스트라가 됩니다.
 
 NotebookFlow는 여러분의 Windows PC를 하나의 자동화 허브로 만들어주는
 브릿지 프로그램입니다. Telegram으로 말을 걸면 GitHub 이슈를 조회하고,
 Slack·Discord·ntfy·Bluesky로 알림을 보내고, 원격 서버(SSH)에 명령을
-내리고, 파일을 자동으로 정리하고, 심지어 Claude Code를 불러 코드를
-직접 고치게 할 수도 있습니다.
+내리고, 파일을 주고받고, 심지어 Claude Code를 불러 코드를 직접
+고치게 할 수도 있습니다.
 
 ---
 
@@ -23,17 +27,22 @@ Slack·Discord·ntfy·Bluesky로 알림을 보내고, 원격 서버(SSH)에 명�
 - **ssh-flow** — 원격 서버에 명령을 보내고 결과(stdout/stderr)를
   돌려받습니다. 여러 대의 원격 서버를 별칭으로 등록해 골라서 보낼 수
   있습니다.
-- **file-ra** — 폴더를 감시하다가 조건에 맞는 파일이 생기면 자동으로
-  옮기거나 알림을 보내는 파일 자동화 엔진입니다.
+- **파일/사진 주고받기** — Telegram으로 파일을 보내면 노트북에 자동
+  저장되고, 반대로 "파일 얻기"/"파일 폴더"/"사진 얻기" 명령으로 노트북의
+  파일을 Telegram으로 받아볼 수 있습니다.
 - **React 기반 웹 연동 관리 화면** — 시나리오(DSL)와 서비스 연동
   정보를 코드 없이 눈으로 보고 편집할 수 있습니다.
 
 내부적으로는 C++로 작성된 DSL(시나리오 스크립트) 엔진이 위 모든
-연동을 오케스트레이션하며, 각 서비스 브릿지(agent-flow/ssh-flow/
-file-ra 등)는 독립된 프로세스로 떠 있다가 REST로 명령을 받습니다.
-동작 원리와 DSL 문법을 더 깊이 알고 싶다면 저장소의 `CLAUDE.md`를
-참고하세요 — 이 프로젝트를 처음부터 함께 만들어온 Claude Code용
-전체 가이드이자, 사람에게도 그대로 유효한 아키텍처 문서입니다.
+연동을 오케스트레이션하며, agent-flow/ssh-flow 같은 서비스 브릿지는
+독립된 프로세스로 떠 있다가 REST로 명령을 받습니다. 동작 원리와 DSL
+문법을 더 깊이 알고 싶다면 저장소의 `CLAUDE.md`를 참고하세요 — 이
+프로젝트를 처음부터 함께 만들어온 Claude Code용 전체 가이드이자,
+사람에게도 그대로 유효한 아키텍처 문서입니다.
+
+> **참고**: 저장소에는 `file-ra/`(조건 기반 파일 자동 정리 엔진)와
+> `mcp-flow/` 소스도 포함되어 있지만, 아직 1차 릴리스(v1.0.0) 설치
+> 파일에는 포함되지 않은 2차 릴리스 예정 기능입니다.
 
 ---
 
@@ -49,8 +58,10 @@ file-ra 등)는 독립된 프로세스로 떠 있다가 REST로 명령을 받습
    MSVC Build Tools 필요).
 2. `NotebookFlow/1. build_NotebookFlowt.bat`으로 메인 실행 파일을
    빌드합니다.
-3. `agent-flow/`, `ssh-flow/`, `file-ra/`, `mcp-flow/`는 각각
-   PyInstaller로 패키징된 독립 프로세스입니다(`*.spec` 참고).
+3. `agent-flow/`, `ssh-flow/`는 각각 PyInstaller로 패키징된 독립
+   프로세스입니다(`*.spec` 참고). (`file-ra/`, `mcp-flow/`는 2차
+   릴리스 예정 기능이라 현재 설치 파일 조립 과정에는 포함되지
+   않습니다.)
 4. `installer/build_installer.ps1`을 실행하면 위 산출물을 모아
    `installer/NotebookFlow.iss`로 설치 파일까지 만들어줍니다.
 
