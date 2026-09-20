@@ -77,6 +77,12 @@ Slack·Discord·ntfy·Bluesky로 알림을 보내고, 원격 서버(SSH)에 명�
    섹션에 넣습니다.
 3. NotebookFlow를 실행(또는 재시작)한 뒤, 등록한 봇에게 `help`라고
    보내보세요. 지금 쓸 수 있는 명령어 목록이 돌아오면 준비 완료입니다.
+
+<p align="center">
+  <img src="assets/telegram_welcome.png" width="420" alt="실제 Telegram 환영 메시지와 help 명령어 안내"/>
+  <br/>
+  <sub>NotebookFlow 실행 시 자동으로 오는 환영 메시지와 <code>help</code> 명령어 안내 화면(실제 캡처)</sub>
+</p>
 4. 웹 연동 관리 화면(`frontend/`, 기본 포트는 `addr.ini`의 `[FLOW]`
    섹션 참고)에서 나머지 서비스(Slack, Discord, GitHub, SSH 대상
    등)를 하나씩 추가할 수 있습니다.
