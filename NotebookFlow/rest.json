@@ -1,0 +1,530 @@
+{
+        "scenario-name": "rest",
+        "state-list":
+        [
+                {
+                        "state-name": "초기",
+                        "event-list":
+                        [
+                                {
+                                        "name-space": "FLOW",
+                                        "event-param": "이벤트명",
+                                        "event-name": "시작",
+                                        "procedure-name": "procRestInit"
+                                },
+                                {
+                                        "name-space": "TELEGRAM",
+                                        "event-param": "이벤트명",
+                                        "event-name": "telegram_tick",
+                                        "procedure-name": "procTelegramPoll"
+                                },
+                                {
+                                        "name-space": "TELEGRAM",
+                                        "event-param": "ok",
+                                        "event-name": "1",
+                                        "procedure-name": "procTelegramResponse"
+                                },
+                                {
+                                        "name-space": "FLOW",
+                                        "event-param": "이벤트명",
+                                        "event-name": "ntfy_test",
+                                        "procedure-name": "procNtfyTest"
+                                },
+                                {
+                                        "name-space": "NTFY",
+                                        "event-param": "event",
+                                        "event-name": "message",
+                                        "procedure-name": "procNtfyResponse"
+                                },
+                                {
+                                        "name-space": "FLOW",
+                                        "event-param": "이벤트명",
+                                        "event-name": "discord_test",
+                                        "procedure-name": "procDiscordTest"
+                                },
+                                {
+                                        "name-space": "FLOW",
+                                        "event-param": "이벤트명",
+                                        "event-name": "github_test",
+                                        "procedure-name": "procGithubIssuesTest"
+                                },
+                                {
+                                        "name-space": "GITHUB",
+                                        "event-param": "메소드",
+                                        "event-name": "GET",
+                                        "procedure-name": "procGithubIssuesResponse"
+                                },
+                                {
+                                        "name-space": "FLOW",
+                                        "event-param": "이벤트명",
+                                        "event-name": "slack_test",
+                                        "procedure-name": "procSlackTest"
+                                },
+                                {
+                                        "name-space": "SLACK",
+                                        "event-param": "메소드",
+                                        "event-name": "POST",
+                                        "procedure-name": "procSlackResponse"
+                                }
+                        ]
+                }
+        ],
+        "procedure-list":
+        [
+                [
+                        {
+                                "procedure-name": "procRestInit",
+                                "name-space": "FLOW",
+                                "exe-list":
+                                [
+                                        {
+                                                "condition": "만약에(참)",
+                                                "if-list":
+                                                [
+                                                        {
+                                                                "exe-type": "함수",
+                                                                "exe-name": "저장(tg_offset,0)"
+                                                        },
+                                                        {
+                                                                "exe-type": "처리",
+                                                                "exe-name": "procTelegramPoll"
+                                                        }
+                                                ]
+                                        }
+                                ]
+                        }
+                ],
+                [
+                        {
+                                "procedure-name": "procTelegramPoll",
+                                "name-space": "TELEGRAM",
+                                "exe-list":
+                                [
+                                        {
+                                                "condition": "만약에(참)",
+                                                "if-list":
+                                                [
+                                                        {
+                                                                "exe-type": "함수",
+                                                                "exe-name": "저장(tg_token,설정.TELEGRAM.bot_token)"
+                                                        },
+                                                        {
+                                                                "exe-type": "전송",
+                                                                "exe-name": "sndTelegramPoll"
+                                                        },
+                                                        {
+                                                                "exe-type": "타이머",
+                                                                "exe-name": "telegram_tick"
+                                                        }
+                                                ]
+                                        }
+                                ]
+                        }
+                ],
+                [
+                        {
+                                "procedure-name": "procTelegramResponse",
+                                "name-space": "TELEGRAM",
+                                "exe-list":
+                                [
+                                        {
+                                                "condition": "만약에(수신메시지.result[0].update_id != NULL)",
+                                                "if-list":
+                                                [
+                                                        {
+                                                                "exe-type": "처리",
+                                                                "exe-name": "procTelegramMsgFound"
+                                                        }
+                                                ]
+                                        },
+                                        {
+                                                "condition": "그외()",
+                                                "else-list":
+                                                [
+                                                        {
+                                                                "exe-type": "��그",
+                                                                "exe-name": "출력(telegram 새 메시지 없음)"
+                                                        }
+                                                ]
+                                        }
+                                ]
+                        }
+                ],
+                [
+                        {
+                                "procedure-name": "procTelegramMsgFound",
+                                "name-space": "TELEGRAM",
+                                "exe-list":
+                                [
+                                        {
+                                                "condition": "만약에(수신메시지.result[0].message.from.id == 설정.TELEGRAM.내chat_id)",
+                                                "if-list":
+                                                [
+                                                        {
+                                                                "exe-type": "함수",
+                                                                "exe-name": "더하기(tg_offset,수신메시지.result[0].update_id,1)"
+                                                        },
+                                                        {
+                                                                "exe-type": "전송",
+                                                                "exe-name": "sndTelegramReply"
+                                                        }
+                                                ]
+                                        },
+                                        {
+                                                "condition": "그외()",
+                                                "else-list":
+                                                [
+                                                        {
+                                                                "exe-type": "함수",
+                                                                "exe-name": "더하기(tg_offset,수신메시지.result[0].update_id,1)"
+                                                        },
+                                                        {
+                                                                "exe-type": "��그",
+                                                                "exe-name": "출력(알 수 없는 발신자로부터의 메시지 무시)"
+                                                        }
+                                                ]
+                                        }
+                                ]
+                        }
+                ],
+                [
+                        {
+                                "procedure-name": "procNtfyTest",
+                                "name-space": "NTFY",
+                                "exe-list":
+                                [
+                                        {
+                                                "condition": "만약에(참)",
+                                                "if-list":
+                                                [
+                                                        {
+                                                                "exe-type": "전송",
+                                                                "exe-name": "sndNtfyAlert"
+                                                        }
+                                                ]
+                                        }
+                                ]
+                        }
+                ],
+                [
+                        {
+                                "procedure-name": "procNtfyResponse",
+                                "name-space": "NTFY",
+                                "exe-list":
+                                [
+                                        {
+                                                "condition": "만약에(참)",
+                                                "if-list":
+                                                [
+                                                        {
+                                                                "exe-type": "��그",
+                                                                "exe-name": "출력(ntfy 알림 전송 완료)"
+                                                        }
+                                                ]
+                                        }
+                                ]
+                        }
+                ],
+                [
+                        {
+                                "procedure-name": "procDiscordTest",
+                                "name-space": "DISCORD",
+                                "exe-list":
+                                [
+                                        {
+                                                "condition": "만약에(참)",
+                                                "if-list":
+                                                [
+                                                        {
+                                                                "exe-type": "전송",
+                                                                "exe-name": "sndDiscordAlert"
+                                                        }
+                                                ]
+                                        }
+                                ]
+                        }
+                ],
+                [
+                        {
+                                "procedure-name": "procGithubIssuesTest",
+                                "name-space": "GITHUB",
+                                "exe-list":
+                                [
+                                        {
+                                                "condition": "만약에(참)",
+                                                "if-list":
+                                                [
+                                                        {
+                                                                "exe-type": "함수",
+                                                                "exe-name": "저장(gh_token,설정.GITHUB.token)"
+                                                        },
+                                                        {
+                                                                "exe-type": "전송",
+                                                                "exe-name": "sndGithubIssues"
+                                                        }
+                                                ]
+                                        }
+                                ]
+                        }
+                ],
+                [
+                        {
+                                "procedure-name": "procGithubIssuesResponse",
+                                "name-space": "GITHUB",
+                                "exe-list":
+                                [
+                                        {
+                                                "condition": "만약에(참)",
+                                                "if-list":
+                                                [
+                                                        {
+                                                                "exe-type": "��그",
+                                                                "exe-name": "출력(github 이슈 조회 완료)"
+                                                        }
+                                                ]
+                                        }
+                                ]
+                        }
+                ],
+                [
+                        {
+                                "procedure-name": "procSlackTest",
+                                "name-space": "SLACK",
+                                "exe-list":
+                                [
+                                        {
+                                                "condition": "만약에(참)",
+                                                "if-list":
+                                                [
+                                                        {
+                                                                "exe-type": "전송",
+                                                                "exe-name": "sndSlackAlert"
+                                                        }
+                                                ]
+                                        }
+                                ]
+                        }
+                ],
+                [
+                        {
+                                "procedure-name": "procSlackResponse",
+                                "name-space": "SLACK",
+                                "exe-list":
+                                [
+                                        {
+                                                "condition": "만약에(참)",
+                                                "if-list":
+                                                [
+                                                        {
+                                                                "exe-type": "��그",
+                                                                "exe-name": "출력(slack 알림 전송 완료)"
+                                                        }
+                                                ]
+                                        }
+                                ]
+                        }
+                ]
+        ],
+        "action-list":
+        [
+                {
+                        "action-type": "타이머",
+                        "name-space": "TELEGRAM",
+                        "action-name": "telegram_tick",
+                        "param-list":
+                        [
+                                {
+                                        "param-key": "전송메시지.이벤트명",
+                                        "param-val": "telegram_tick"
+                                },
+                                {
+                                        "param-key": "전송메시지.시간",
+                                        "param-val": "5000"
+                                }
+                        ]
+                },
+                {
+                        "action-type": "전송",
+                        "name-space": "TELEGRAM",
+                        "action-name": "sndTelegramPoll",
+                        "param-list":
+                        [
+                                {
+                                        "param-key": "전송메시지.메소드",
+                                        "param-val": "GET"
+                                },
+                                {
+                                        "param-key": "전송메시지.주소.도메인",
+                                        "param-val": "설정.TELEGRAM.domain"
+                                },
+                                {
+                                        "param-key": "전송메시지.주소.경로",
+                                        "param-val": "문장.telegramPollPath"
+                                },
+                                {
+                                        "param-key": "전송메시지.주소.파라미터[0].key",
+                                        "param-val": "offset"
+                                },
+                                {
+                                        "param-key": "전송메시지.주소.파라미터[0].val",
+                                        "param-val": "세션.tg_offset"
+                                }
+                        ]
+                },
+                {
+                        "action-type": "전송",
+                        "name-space": "TELEGRAM",
+                        "action-name": "sndTelegramReply",
+                        "param-list":
+                        [
+                                {
+                                        "param-key": "전송메시지.메소드",
+                                        "param-val": "GET"
+                                },
+                                {
+                                        "param-key": "전송메시지.주소.도메인",
+                                        "param-val": "설정.TELEGRAM.domain"
+                                },
+                                {
+                                        "param-key": "전송메시지.주소.경로",
+                                        "param-val": "문장.telegramReplyPath"
+                                },
+                                {
+                                        "param-key": "전송메시지.주소.파라미터[0].key",
+                                        "param-val": "chat_id"
+                                },
+                                {
+                                        "param-key": "전송메시지.주소.파라미터[0].val",
+                                        "param-val": "수신메시지.result[0].message.chat.id"
+                                },
+                                {
+                                        "param-key": "전송메시지.주소.파라미터[1].key",
+                                        "param-val": "text"
+                                },
+                                {
+                                        "param-key": "전송메시지.주소.파라미터[1].val",
+                                        "param-val": "문장.telegramReplyText"
+                                }
+                        ]
+                },
+                {
+                        "action-type": "전송",
+                        "name-space": "NTFY",
+                        "action-name": "sndNtfyAlert",
+                        "param-list":
+                        [
+                                {
+                                        "param-key": "전송메시지.메소드",
+                                        "param-val": "POST"
+                                },
+                                {
+                                        "param-key": "전송메시지.주소.도메인",
+                                        "param-val": "설정.NTFY.domain"
+                                },
+                                {
+                                        "param-key": "전송메시지.주소.경로",
+                                        "param-val": "^^^"
+                                },
+                                {
+                                        "param-key": "전송메시지.topic",
+                                        "param-val": "설정.NTFY.topic"
+                                },
+                                {
+                                        "param-key": "전송메시지.message",
+                                        "param-val": "수신메시지.PARAMS.알림내용"
+                                }
+                        ]
+                },
+                {
+                        "action-type": "전송",
+                        "name-space": "DISCORD",
+                        "action-name": "sndDiscordAlert",
+                        "param-list":
+                        [
+                                {
+                                        "param-key": "전송메시지.메소드",
+                                        "param-val": "POST"
+                                },
+                                {
+                                        "param-key": "전송메시지.주소.도메인",
+                                        "param-val": "설정.DISCORD.webhook_url"
+                                },
+                                {
+                                        "param-key": "전송메시지.content",
+                                        "param-val": "수신메시지.PARAMS.알림내용"
+                                }
+                        ]
+                },
+                {
+                        "action-type": "전송",
+                        "name-space": "GITHUB",
+                        "action-name": "sndGithubIssues",
+                        "param-list":
+                        [
+                                {
+                                        "param-key": "전송메시지.메소드",
+                                        "param-val": "GET"
+                                },
+                                {
+                                        "param-key": "전송메시지.주소.도메인",
+                                        "param-val": "설정.GITHUB.domain"
+                                },
+                                {
+                                        "param-key": "전송메시지.주소.경로",
+                                        "param-val": "^^^repos^^^dorafather^^^NotebookRAG^^^issues"
+                                },
+                                {
+                                        "param-key": "전송메시지.헤더.Authorization",
+                                        "param-val": "문장.githubAuthHeader"
+                                },
+                                {
+                                        "param-key": "전송메시지.헤더.User-Agent",
+                                        "param-val": "NotebookFlow"
+                                }
+                        ]
+                },
+                {
+                        "action-type": "전송",
+                        "name-space": "SLACK",
+                        "action-name": "sndSlackAlert",
+                        "param-list":
+                        [
+                                {
+                                        "param-key": "전송메시지.메소드",
+                                        "param-val": "POST"
+                                },
+                                {
+                                        "param-key": "전송메시지.주소.도메인",
+                                        "param-val": "설정.SLACK.webhook_url"
+                                },
+                                {
+                                        "param-key": "전송메시지.text",
+                                        "param-val": "수신메시지.PARAMS.알림내용"
+                                }
+                        ]
+                }
+        ],
+        "stmt-list":
+        [
+                {
+                        "stmt-name": "telegramPollPath",
+                        "name-space": "TELEGRAM",
+                        "stmt-data": "/bot$$$세션.tg_token$$$/getUpdates"
+                },
+                {
+                        "stmt-name": "telegramReplyPath",
+                        "name-space": "TELEGRAM",
+                        "stmt-data": "/bot$$$세션.tg_token$$$/sendMessage"
+                },
+                {
+                        "stmt-name": "telegramReplyText",
+                        "name-space": "TELEGRAM",
+                        "stmt-data": "받았습니다: $$$수신메시지.result[0].message.text$$$"
+                },
+                {
+                        "stmt-name": "githubAuthHeader",
+                        "name-space": "GITHUB",
+                        "stmt-data": "token $$$세션.gh_token$$$"
+                }
+        ]
+}

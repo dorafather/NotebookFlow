@@ -1,0 +1,34 @@
+{
+  "_설명": "에이전트 페르소나는 이제 Claude Code 네이티브 서브에이전트 정의(User/Project agents)가 진실의 원천이다. 여기서는 subagent_name으로 '누구를 명시적으로 지목할지'만 관리한다 — 페르소나 텍스트를 여기 중복 저장하지 않는다.",
+  "_주의": "cwd의 ${VM_SHARE_ROOT}는 agent_ra.py 기동 시 VM_SHARE_ROOT 환경변수(ecosystem.config.cjs가 주입)로 치환된다. VM IP가 바뀌어도 ecosystem.config.cjs의 VM_IP 한 줄만 고치면 여기는 자동으로 따라간다 — 더 이상 이 파일을 직접 고칠 필요 없음.",
+  "agents": [
+    {
+      "name": "manager",
+      "subagent_name": "workflow-manager",
+      "inbox_topic": "AGENT.MANAGER",
+      "cwd": "${VM_SHARE_ROOT}\\src\\workflow",
+      "timeout_sec": 300
+    },
+    {
+      "name": "developer",
+      "subagent_name": "dsl-process-developer",
+      "inbox_topic": "AGENT.DEV",
+      "cwd": "${VM_SHARE_ROOT}\\src",
+      "timeout_sec": 900
+    },
+    {
+      "name": "qa",
+      "subagent_name": "dsl-qa-engineer",
+      "inbox_topic": "AGENT.QA",
+      "cwd": "${VM_SHARE_ROOT}\\src",
+      "timeout_sec": 600
+    },
+    {
+      "name": "worker",
+      "subagent_name": "ceo-strategic-advisor",
+      "inbox_topic": "AGENT.WORKER",
+      "cwd": "${VM_SHARE_ROOT}\\src",
+      "timeout_sec": 600
+    }
+  ]
+}

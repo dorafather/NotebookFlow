@@ -1,0 +1,9 @@
+#include "../src/resource.h"
+#include <afxres.h>
+
+IDI_TRAY_ICON ICON "notebookflow.ico"
+
+// [업무지침_mcp_file_flow_배포제외_tray다이얼로그제거.md, 2026-09-20]
+// File RA 설정 다이얼로그 템플릿(IDD_MAIN_DIALOG/IDD_FILEFLOW_EDIT_DIALOG)을
+// 완전히 제거했다 - 이미 웹 UI로 대체된 구식 UI. tray-flow.exe는 이제
+// 트레이 아이콘 표시 + 웹 UI 런처 + 자식 프로세스 워치독 역할만 한다.

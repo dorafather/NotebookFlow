@@ -1,0 +1,55 @@
+{
+	"configurations": [
+		{
+			"name": "Win32",
+			"includePath": [
+				"${workspaceFolder}",
+				"${workspaceFolder}/data",
+				"${workspaceFolder}/json",
+				"${workspaceFolder}/kstring",
+				"${workspaceFolder}/thread",
+				"${workspaceFolder}/dtime",
+				"${workspaceFolder}/parser",
+				"${workspaceFolder}/interpretor",
+				"${workspaceFolder}/flow",
+				"${workspaceFolder}/dfile"
+			],
+			"defines": [
+				"_STATIC",
+				"_MSC_VER"
+			],
+			"windowsSdkVersion": "10.0.26100.0",
+			"compilerPath": "C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\VC\\Tools\\MSVC\\14.50.35717\\bin\\Hostx64\\x64\\cl.exe",
+			"cStandard": "c17",
+			"cppStandard": "c++17",
+			"intelliSenseMode": "windows-msvc-x64"
+		},
+		{
+			"name": "Linux",
+			"includePath": [
+				"${workspaceFolder}",
+				"${workspaceFolder}/data",
+				"${workspaceFolder}/json",
+				"${workspaceFolder}/kstring",
+				"${workspaceFolder}/thread",
+				"${workspaceFolder}/dtime",
+				"${workspaceFolder}/parser",
+				"${workspaceFolder}/interpretor",
+				"${workspaceFolder}/flow",
+				"${workspaceFolder}/dfile"
+			],
+			"defines": [
+				"UNIX",
+				"_LINUX_",
+				"LINUX",
+				"_REENTRANT",
+				"DEBUG"
+			],
+			"compilerPath": "/usr/bin/g++",
+			"cStandard": "c17",
+			"cppStandard": "c++17",
+			"intelliSenseMode": "linux-gcc-x64"
+		}
+	],
+	"version": 4
+}

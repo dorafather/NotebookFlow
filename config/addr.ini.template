@@ -1,0 +1,110 @@
+[INFO]
+process=NotebookFlow
+version=v1.0.0
+
+[RA_ADDRESS]
+rag-ra=http://127.0.0.1:8420/rag/search
+rag-ra-domain=http://127.0.0.1:8420
+llm-ra=http://127.0.0.1:8422/judge
+file-ra=http://127.0.0.1:8425/command
+file-ra-domain=http://127.0.0.1:8425
+
+[FLOW]
+domain=http://127.0.0.1/notebookflow
+
+[RA_SESSION_ID]
+file-ra=filera-manager
+
+[FILE]
+domain=http://127.0.0.1:8425
+cmd_path=/command
+telegram_alias=파일
+
+[AGENT]
+domain=http://127.0.0.1:8430
+cmd_path=/notebookflow/agent/execute
+telegram_alias=클루드코드
+
+[SSH]
+domain=http://127.0.0.1:8450
+cmd_path=/notebookflow/ssh/execute
+
+#여러 원격 서버를 등록하려면 [SSH_별칭] 섹션을 원하는 만큼 추가하세요.
+#Telegram에서 "텔넷 회사서버 df"처럼 별칭을 붙여 부르면 해당 서버로
+#명령이 전달됩니다(별칭 생략 시 [SSH_기본]으로 라우팅됩니다).
+[SSH_기본]
+host=<여기에 원격 서버 IP 또는 호스트명을 입력하세요>
+port=<여기에 SSH 포트를 입력하세요(기본 22)>
+username=<여기에 SSH 계정명을 입력하세요>
+password=<여기에 SSH 비밀번호를 입력하세요>
+
+[SSH_회사서버]
+host=<여기에 원격 서버 IP 또는 호스트명을 입력하세요>
+port=<여기에 SSH 포트를 입력하세요(기본 22)>
+username=<여기에 SSH 계정명을 입력하세요>
+password=<여기에 SSH 비밀번호를 입력하세요>
+
+[SSH_홈서버]
+host=<여기에 원격 서버 IP 또는 호스트명을 입력하세요>
+port=<여기에 SSH 포트를 입력하세요(기본 22)>
+username=<여기에 SSH 계정명을 입력하세요>
+password=<여기에 SSH 비밀번호를 입력하세요>
+
+[TELEGRAM]
+bot_token=<여기에 Telegram Bot Token을 입력하세요>
+my_chat_id=<여기에 본인의 Telegram chat_id를 입력하세요>
+domain=https://api.telegram.org
+category=알람
+message_field=문장.텔레그램응답문장
+target_action=텔레그램알람전송
+
+[NTFY]
+topic=<여기에 ntfy 토픽 이름을 입력하세요>
+domain=https://ntfy.sh
+category=알람
+message_field=message
+target_action=Ntfy알람전송
+telegram_alias=노티파이
+
+[DISCORD]
+webhook_url=<여기에 Discord Webhook URL을 입력하세요>
+domain=https://discord.com/api
+category=알람
+message_field=content
+target_action=디스코드알람전송
+telegram_alias=디스코드
+
+[GITHUB]
+token=<여기에 GitHub Personal Access Token을 입력하세요>
+domain=https://api.github.com
+category=조회
+telegram_alias=깃허브
+
+[SLACK]
+webhook_url=<여기에 Slack Webhook URL을 입력하세요>
+domain=https://hooks.slack.com
+category=알람
+message_field=text
+target_action=슬랙알람전송
+telegram_alias=슬랙
+
+[BSKY]
+bot_name=<여기에 Bluesky 계정 표시 이름을 입력하세요>
+my_id=<여기에 Bluesky 계정 ID(예: name.bsky.social)를 입력하세요>
+app_pass=<여기에 Bluesky App Password를 입력하세요>
+domain=https://bsky.social
+category=알람
+message_field=record.text
+target_action=sndUpText
+telegram_alias=블루스카이
+
+[LINEAR]
+api_key=<여기에 Linear API Key를 입력하세요>
+domain=https://api.linear.app
+
+[NOTION]
+token=<여기에 Notion Integration Token을 입력하세요>
+domain=https://api.notion.com
+
+[TRACE]
+name=TELEGRAM
