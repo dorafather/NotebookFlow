@@ -40,6 +40,7 @@ parser/STMTPARSER.cpp
 parser/SCEPARSER.cpp
 parser/INIPARSER.cpp
 parser/LOGPARSER.cpp
+parser/SBRKPARSER.cpp
 interpretor/EXECORE.cpp
 interpretor/EXESCEN.cpp
 interpretor/EXEACTION.cpp

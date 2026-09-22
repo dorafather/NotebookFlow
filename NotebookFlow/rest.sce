@@ -9,6 +9,8 @@
   FLOW.수신메시지.이벤트명 == 클루드코드완료    처리.클루드코드완료처리
   FLOW.수신메시지.이벤트명 == 깃허브이슈등록    처리.깃허브이슈등록트리거
   FLOW.수신메시지.이벤트명 == 깃허브이슈폴링    처리.깃허브이슈폴링처리
+  FLOW.수신메시지.이벤트명 == NF봇타이머    처리.NF봇핑전송
+  FLOW.수신메시지.이벤트명 == NF봇그룹메시지전송    처리.NF봇그룹메시지직접트리거
   TELEGRAM.수신메시지.이벤트명 == 텔레그램타이머    처리.텔레그램핑전송
   TELEGRAM.수신메시지.이벤트명 == 텔레그램환영타이머    처리.텔레그램환영처리
   TELEGRAM.수신메시지.ok == 1    처리.텔레그램수신처리
@@ -32,6 +34,7 @@
   만약에(참)
     처리.텔레그램초기화
     처리.깃허브이슈기준선설정
+    처리.NF봇초기화
 }
 처리::FLOW.클루드코드완료처리
 {
@@ -63,7 +66,9 @@
 }
 처리::TELEGRAM.텔레그램수신처리
 {
-  만약에(수신메시지.result[0].update_id != NULL)
+  만약에(수신메시지.주소.경로 !!! 세션.nfbot_token)
+    처리.NF봇수신처리
+  그외그외(수신메시지.result[0].update_id != NULL)
     처리.텔레그램에코응답처리
   그외그외(수신메시지.result.file_path != NULL)
     처리.텔레그램파일다운로드
@@ -375,6 +380,40 @@
     전송.텔레그램알람직접응답
     전송.텔레그램알람전송
 }
+처리::NOTEBOOKFLOW_BOT.NF봇초기화
+{
+  만약에(참)
+    함수.저장(nfbot_offset,0)
+    처리.NF봇핑전송
+}
+처리::NOTEBOOKFLOW_BOT.NF봇핑전송
+{
+  만약에(참)
+    함수.저장(nfbot_token,설정.NOTEBOOKFLOW_BOT.bot_token)
+    전송.NF봇폴
+    타이머.NF봇타이머
+}
+처리::NOTEBOOKFLOW_BOT.NF봇수신처리
+{
+  만약에(수신메시지.result[0].update_id != NULL)
+    처리.NF봇수신메시지처리
+  그외
+    로그.출력(notebookflow_bot 새 메시지 없음)
+}
+처리::NOTEBOOKFLOW_BOT.NF봇수신메시지처리
+{
+  만약에(참)
+    함수.더하기(nfbot_offset,수신메시지.result[0].update_id,1)
+    로그.출력(NotebookFLOW 커뮤니티 채널 수신 세션.nfbot_offset)
+    전송.NF봇접수확인전송
+}
+처리::NOTEBOOKFLOW_BOT.NF봇그룹메시지직접트리거
+{
+  만약에(참)
+    함수.저장(nfbot_group_message,수신메시지.message)
+    전송.NF봇그룹메시지직접응답
+    전송.NF봇그룹메시지전송
+}
 처리::DISCORD.디스코드알람응답처리
 {
   만약에(참)
@@ -628,6 +667,11 @@
   전송메시지.이벤트명 = 깃허브이슈폴링
   전송메시지.시간 = 86400000
 }
+타이머::NOTEBOOKFLOW_BOT.NF봇타이머
+{
+  전송메시지.이벤트명 = NF봇타이머
+  전송메시지.시간 = 5000
+}
 전송::TELEGRAM.텔레그램폴
 {
   전송메시지.메소드 = GET
@@ -659,6 +703,39 @@
   전송메시지.주소.파라미터[0].val = 설정.TELEGRAM.my_chat_id
   전송메시지.주소.파라미터[1].key = text
   전송메시지.주소.파라미터[1].val = 세션.alert_message
+}
+전송::NOTEBOOKFLOW_BOT.NF봇폴
+{
+  전송메시지.메소드 = GET
+  전송메시지.주소.도메인 = 설정.NOTEBOOKFLOW_BOT.domain
+  전송메시지.주소.경로 = 문장.NF봇폴경로
+  전송메시지.주소.파라미터[0].key = offset
+  전송메시지.주소.파라미터[0].val = 세션.nfbot_offset
+}
+전송::NOTEBOOKFLOW_BOT.NF봇접수확인전송
+{
+  전송메시지.메소드 = GET
+  전송메시지.주소.도메인 = 설정.NOTEBOOKFLOW_BOT.domain
+  전송메시지.주소.경로 = 문장.NF봇응답경로
+  전송메시지.주소.파라미터[0].key = chat_id
+  전송메시지.주소.파라미터[0].val = 수신메시지.result[0].message.chat.id
+  전송메시지.주소.파라미터[1].key = text
+  전송메시지.주소.파라미터[1].val = 문장.NF봇접수확인문장
+}
+전송::NOTEBOOKFLOW_BOT.NF봇그룹메시지직접응답
+{
+  전송메시지.주소 = 수신메시지.주소
+  전송메시지.RESULT = 0
+}
+전송::NOTEBOOKFLOW_BOT.NF봇그룹메시지전송
+{
+  전송메시지.메소드 = GET
+  전송메시지.주소.도메인 = 설정.NOTEBOOKFLOW_BOT.domain
+  전송메시지.주소.경로 = 문장.NF봇응답경로
+  전송메시지.주소.파라미터[0].key = chat_id
+  전송메시지.주소.파라미터[0].val = 설정.NOTEBOOKFLOW_BOT.community_chat_id
+  전송메시지.주소.파라미터[1].key = text
+  전송메시지.주소.파라미터[1].val = 세션.nfbot_group_message
 }
 전송::DISCORD.디스코드알람직접응답
 {
@@ -981,6 +1058,12 @@ dorafather와 샛별이가 여러분의 이슈에 적극적으로 소통할 것�
 {/file/bot$$$세션.tg_token$$$/$$$세션.download_file_path$$$}
 문장::TELEGRAM.텔레그램파일저장알림문장
 {파일 저장 완료: $$$수신메시지.저장경로$$$}
+문장::NOTEBOOKFLOW_BOT.NF봇폴경로
+{/bot$$$세션.nfbot_token$$$/getUpdates}
+문장::NOTEBOOKFLOW_BOT.NF봇응답경로
+{/bot$$$세션.nfbot_token$$$/sendMessage}
+문장::NOTEBOOKFLOW_BOT.NF봇접수확인문장
+{접수되었습니다. NotebookFLOW 커뮤니티 채널에서 확인 후 검토하겠습니다.}
 문장::GITHUB.깃허브인증값
 {token $$$세션.gh_token$$$}
 문장::GITHUB.깃허브새이슈항목문장

@@ -1,5 +1,6 @@
 #include "EXEPARAM.h"
 #include "EXESTMT.h"
+#include "SBRKPARSER.h"
 
 namespace nsUtil
 {
@@ -12,6 +13,7 @@ static bool s_fnIsAllDigits(KCSTR _psz)
 	}
 	return true;
 }
+#if 0   // >>> dorafather
 static KCSTR s_fnGetObjBracketVal(ExeCore::Session * _pSes, POOL::POOLDATA & _rPool,
 									KCSTR _tmp, KSTRING & _buf)
 {
@@ -62,6 +64,7 @@ static KCSTR s_fnGetObjBracketVal(ExeCore::Session * _pSes, POOL::POOLDATA & _rP
 	_buf = pCur->VAL();
 	return (KCSTR)_buf;
 }
+#endif
 ExeParam::ExeParam(){}
 ExeParam::~ExeParam(){}
 KCSTR ExeParam::PARAM(KSTRING & _val1, KSTRING & _val2,
@@ -94,11 +97,17 @@ KCSTR ExeParam::PARAM(KSTRING & _val1, KSTRING & _val2,
 					else
 						tmp.PRINT("%s.",(KCSTR)tok[i]);
 				}
+				#if 1 // >>> dorafather
+				parseSbrk sbrk;
+				sbrk.parse(_rPool,(KCSTR)tmp);
+				_buf = (KCSTR)pSes->m_subObj.GETR(sbrk.dst.c_str()).VAL();
+				#else
 				if(strchr((KCSTR)tmp,'[') != NULL)
 				{
 					return s_fnGetObjBracketVal(pSes, _rPool, (KCSTR)tmp, _buf);
 				}
 				_buf = (KCSTR)pSes->m_subObj.GETR((KCSTR)tmp).VAL();
+				#endif
 				return _buf;
 			}
 			if(IS_DSL_K_LIST((KCSTR)tok[0]))

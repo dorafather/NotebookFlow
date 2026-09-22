@@ -61,6 +61,7 @@ SRCS += ./parser/STMTPARSER.cpp
 SRCS += ./parser/SCEPARSER.cpp
 SRCS += ./parser/INIPARSER.cpp
 SRCS += ./parser/LOGPARSER.cpp
+SRCS += ./parser/SBRKPARSER.cpp
 SRCS += ./interpretor/EXECORE.cpp
 SRCS += ./interpretor/EXESCEN.cpp
 SRCS += ./interpretor/EXEACTION.cpp

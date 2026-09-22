@@ -28,6 +28,41 @@ using std::max;
 #pragma comment(lib, "gdiplus.lib")
 using namespace nsUtil;
 using namespace NotebookFlowHttp;
+HelpFileReader * HelpFileReader::m_pInst = NULL;
+HelpFileReader::HelpFileReader()
+{
+}
+HelpFileReader::~HelpFileReader()
+{
+}
+HelpFileReader & HelpFileReader::OBJ()
+{
+	if(m_pInst==NULL)
+	{
+		m_pInst = new HelpFileReader;
+		m_pInst->Read("./help.json");
+	}
+	return *m_pInst;
+}
+void HelpFileReader::Read(KCSTR  _path)
+{
+	m_lock.WLOCK();
+	m_file.init(_path);
+	m_msg.PARSE(m_file.m_pszRawData);
+	m_file.enablecheckchanged();
+	m_lock.UNLOCK();
+	Gpolling::setTimer(this, "json", 1000, jsonfiletimeout);
+}
+void HelpFileReader::jsonfiletimeout(Gpolling::info * _info)
+{
+	HelpFileReader * pFile = (HelpFileReader*)(_info->m_pOwner);
+	pFile->m_lock.WLOCK();
+	if(pFile->m_file.checkchanged())
+	{
+		pFile->m_msg.PARSE(pFile->m_file.m_pszRawData);
+	}
+	pFile->m_lock.UNLOCK();
+}
 static const std::string & s_fnGetExeDirUtf8()
 {
 	static std::string s_dir;
@@ -235,6 +270,59 @@ static void s_fnEnsureGdiplusStarted()
 }
 static bool s_fnGenerateHelpImage(const std::string & _outPathUtf8)
 {
+	#if 1
+	HelpFileReader & help = HelpFileReader::OBJ();
+	help.m_lock.RLOCK();
+	RestParam & rows = help.m_msg.GET("rows");
+	const int nRows = rows.NUMS();
+	const int headerH = 56;
+	const int rowH = 42;
+	const int padX = 20;
+	const int col1W = 300;
+	const int col2W = 460;
+	const int width = padX * 3 + col1W + col2W;
+	const int height = headerH + rowH * nRows + padX;
+	s_fnEnsureGdiplusStarted();
+	Gdiplus::Bitmap bmp(width, height, PixelFormat24bppRGB);
+	Gdiplus::Graphics g(&bmp);
+	g.SetTextRenderingHint(Gdiplus::TextRenderingHintAntiAlias);
+	g.Clear(Gdiplus::Color(255, 255, 255, 255));
+	Gdiplus::FontFamily fam(L"맑은 고딕");
+	Gdiplus::Font fontTitle(&fam, 20, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
+	Gdiplus::Font fontCmd(&fam, 15, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
+	Gdiplus::Font fontDesc(&fam, 15, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
+	Gdiplus::SolidBrush brushBody(Gdiplus::Color(255, 40, 42, 54));
+	Gdiplus::SolidBrush brushHeaderBg(Gdiplus::Color(255, 47, 58, 82));
+	Gdiplus::SolidBrush brushHeaderText(Gdiplus::Color(255, 255, 255, 255));
+	Gdiplus::SolidBrush brushAltRow(Gdiplus::Color(255, 244, 246, 250));
+	Gdiplus::Pen pen(Gdiplus::Color(255, 224, 226, 232), 1.0f);
+	g.FillRectangle(&brushHeaderBg, 0, 0, width, headerH);
+	std::wstring title = s_fnUtf8ToWide("NotebookFlow 텔레그램 명령어");
+	g.DrawString(title.c_str(), -1, &fontTitle,
+		Gdiplus::PointF((float)padX, (float)(headerH / 2 - 13)), &brushHeaderText);
+	int y = headerH;
+	for (int i = 0; i < nRows; i++)
+	{
+		if (i % 2 == 1) g.FillRectangle(&brushAltRow, 0, y, width, rowH);
+		RestParam & item = rows[i];
+		std::string szCmd = (KCSTR)item.GET("cmd").VAL();
+		std::string szDesc = (KCSTR)item.GET("desc").VAL();;
+		std::wstring cmd = s_fnUtf8ToWide(szCmd);
+		std::wstring desc = s_fnUtf8ToWide(szDesc);
+		g.DrawString(cmd.c_str(), -1, &fontCmd,
+			Gdiplus::PointF((float)padX, (float)(y + rowH / 2 - 11)), &brushBody);
+		g.DrawString(desc.c_str(), -1, &fontDesc,
+			Gdiplus::PointF((float)(padX * 2 + col1W), (float)(y + rowH / 2 - 11)), &brushBody);
+		g.DrawLine(&pen, 0.0f, (float)(y + rowH), (float)width, (float)(y + rowH));
+		y += rowH;
+	}
+	help.m_lock.UNLOCK();
+	g.DrawLine(&pen, (float)(padX * 2 + col1W - 10), (float)headerH, (float)(padX * 2 + col1W - 10), (float)height);
+	CLSID jpegClsid;
+	if (!s_fnFindJpegEncoderClsid(jpegClsid)) return false;
+	std::wstring wpath = s_fnUtf8ToWide(_outPathUtf8);
+	return bmp.Save(wpath.c_str(), &jpegClsid, NULL) == Gdiplus::Ok;
+	#else
 	struct Row { const char * cmd; const char * desc; };
 	static const Row s_rows[] = {
 		{"help", "도움말 보기"},
@@ -295,6 +383,7 @@ static bool s_fnGenerateHelpImage(const std::string & _outPathUtf8)
 	if (!s_fnFindJpegEncoderClsid(jpegClsid)) return false;
 	std::wstring wpath = s_fnUtf8ToWide(_outPathUtf8);
 	return bmp.Save(wpath.c_str(), &jpegClsid, NULL) == Gdiplus::Ok;
+	#endif
 }
 static void s_fnEmitTraceJson(const char * _dir, const char * _json)
 {
