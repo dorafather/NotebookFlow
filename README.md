@@ -1,7 +1,7 @@
 # NotebookFlow
 
 <p align="center">
-  <img src="assets/NotebookFLOW.jpg" alt="NotebookFlow" width="240"/>
+  <img src="assets/NotebookFLOW.jpg" alt="NotebookFlow" width="150"/>
 </p>
 
 > 당신의 노트북이 모든 서비스를 지휘하는 오케스트라가 됩니다.
