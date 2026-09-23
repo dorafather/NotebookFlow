@@ -89,6 +89,7 @@
     함수.앞자리비교(cmd_텔넷,수신메시지.result[0].message.text,텔넷)
     함수.앞자리비교(cmd_파일,수신메시지.result[0].message.text,파일)
     함수.앞자리비교(cmd_사진,수신메시지.result[0].message.text,사진)
+    함수.앞자리비교(cmd_고객문의,수신메시지.result[0].message.text,고객문의)
     처리.텔레그램수신메시지분기
   그외
     함수.더하기(tg_offset,수신메시지.result[0].update_id,1)
@@ -184,6 +185,8 @@
     처리.텔레그램파일명령처리
   그외그외(세션.cmd_사진 == 1)
     처리.텔레그램사진명령처리
+  그외그외(세션.cmd_고객문의 == 1)
+    처리.텔레그램고객문의명령처리
   그외
     전송.델레그램응답전송
 }
@@ -258,6 +261,17 @@
     함수.저장(gh_token,설정.GITHUB.token)
     로그.출력(텔레그램 발 이슈등록 세션.issue_reg_title)
     전송.깃허브이슈등록전송
+}
+처리::TELEGRAM.텔레그램고객문의명령처리
+{
+  만약에(참)
+    함수.단어분리(cmd_word_list,수신메시지.result[0].message.text)
+    함수.단어합치기(cmd_rest,세션.리스트.cmd_word_list,1)
+    함수.저장(pending_reply_chat_id,수신메시지.result[0].message.chat.id)
+    함수.저장(nfbot_group_message,문장.NF봇고객문의본문문장)
+    로그.출력(고객문의 커뮤니티 전달 세션.cmd_rest)
+    전송.NF봇그룹메시지전송
+    전송.델레그램응답전송
 }
 처리::TELEGRAM.텔레그램슬랙명령처리
 {
@@ -670,7 +684,7 @@
 타이머::NOTEBOOKFLOW_BOT.NF봇타이머
 {
   전송메시지.이벤트명 = NF봇타이머
-  전송메시지.시간 = 5000
+  전송메시지.시간 = 60000
 }
 전송::TELEGRAM.텔레그램폴
 {
@@ -1064,6 +1078,8 @@ dorafather와 샛별이가 여러분의 이슈에 적극적으로 소통할 것�
 {/bot$$$세션.nfbot_token$$$/sendMessage}
 문장::NOTEBOOKFLOW_BOT.NF봇접수확인문장
 {접수되었습니다. NotebookFLOW 커뮤니티 채널에서 확인 후 검토하겠습니다.}
+문장::NOTEBOOKFLOW_BOT.NF봇고객문의본문문장
+{[고객문의] $$$세션.cmd_rest$$$ (Telegram chat_id: $$$세션.pending_reply_chat_id$$$)}
 문장::GITHUB.깃허브인증값
 {token $$$세션.gh_token$$$}
 문장::GITHUB.깃허브새이슈항목문장

@@ -99,6 +99,7 @@ Copy-Item (Join-Path $root "NotebookFlow\NotebookFlow.exe") (Join-Path $nfDir "N
 Copy-Item (Join-Path $root "NotebookFlow\rest.sce") (Join-Path $nfDir "rest.sce") -Force
 Copy-Item (Join-Path $root "NotebookFlow\user.sce") (Join-Path $nfDir "user.sce") -Force
 Copy-Item (Join-Path $root "CLAUDE.md") (Join-Path $nfDir "CLAUDE.md") -Force
+Copy-Item (Join-Path $root "NotebookFlow\help.json") (Join-Path $nfDir "help.json") -Force
 $nfFrontendDir = Join-Path $nfDir "frontend"
 if (Test-Path $nfFrontendDir) { Remove-Item $nfFrontendDir -Recurse -Force }
 Copy-Item $frontendDist $nfFrontendDir -Recurse -Force
@@ -106,7 +107,7 @@ Copy-Item $frontendDist $nfFrontendDir -Recurse -Force
 # 시작하고, 최초 실행 시 NotebookFlow.exe가 스스로 ..\config\addr.ini.template
 # 에서 생성하거나(설치 마법사가 건너뛰기를 선택한 경우), 설치 마법사가
 # ssPostInstall에서 검증된 Telegram 값을 채워 미리 만들어 준다(아래 .iss 참고).
-Write-Host "  -> bin\notebookflow\ 조립 완료 (NotebookFlow.exe/rest.sce/user.sce/CLAUDE.md/frontend)"
+Write-Host "  -> bin\notebookflow\ 조립 완료 (NotebookFlow.exe/rest.sce/user.sce/CLAUDE.md/help.json/frontend)"
 
 # --- bin\agent-flow\ (PyInstaller onedir 결과물 flat 복사) ---
 $agentFlowDistDir = Join-Path $root "agent-flow\dist\agent-flow"

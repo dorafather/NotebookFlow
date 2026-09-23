@@ -58,6 +58,14 @@ category=알람
 message_field=문장.텔레그램응답문장
 target_action=텔레그램알람전송
 
+#NOTEBOOKFLOW_BOT은 예외적으로 실제 값이 채워져 있습니다(다른 섹션과
+#다르게 개인 계정이 아니라 모든 사용자가 공유하는 공용 커뮤니티 채널이라,
+#배포 시점부터 즉시 동작하도록 의도한 것입니다 - CLAUDE.md 1.11절 참고).
+[NOTEBOOKFLOW_BOT]
+bot_token=8921249532:AAHT3rGqE_t0QHvO2YElOpO1XCsemzsjlAI
+community_chat_id=-5308843408
+domain=https://api.telegram.org
+
 [NTFY]
 topic=<여기에 ntfy 토픽 이름을 입력하세요>
 domain=https://ntfy.sh
