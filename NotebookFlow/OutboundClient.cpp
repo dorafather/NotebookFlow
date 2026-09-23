@@ -111,6 +111,14 @@ static bool s_fnHttpsRequest(const std::string & _url, bool _isPost, const std::
 		_respBody = "WinHttpOpen failed";
 		return false;
 	}
+	// Windows 8 이하는 WinHTTP 기본 협상 프로토콜이 SSL3/TLS1.0까지만 켜져
+	// 있어 TLS1.2 이상만 받는 서버(Telegram 등)와 핸드셰이크가 실패한다
+	// (반면 브라우저는 자체 TLS 스택을 쓰므로 영향 없음). 리터럴 값 사용은
+	// WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_1/1_2가 winhttp.h에서
+	// _WIN32_WINNT>=0x0602 조건부로만 정의돼 빌드 환경에 따라 매크로가
+	// 없을 수 있기 때문.
+	DWORD secureProtocols = 0x00000080 /*TLS1_0*/ | 0x00000200 /*TLS1_1*/ | 0x00000800 /*TLS1_2*/;
+	WinHttpSetOption(hSession, WINHTTP_OPTION_SECURE_PROTOCOLS, &secureProtocols, sizeof(secureProtocols));
 	HINTERNET hConnect = WinHttpConnect(hSession, hostName, uc.nPort, 0);
 	if (!hConnect)
 	{
