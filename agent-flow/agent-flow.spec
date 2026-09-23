@@ -19,6 +19,12 @@ tmp_ret = collect_all('fastapi')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 tmp_ret = collect_all('httpx')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
+# httpx가 SSL 컨텍스트 생성 시 certifi.where()로 CA 번들을 찾는데,
+# collect_all('httpx')는 httpx 자체 데이터만 담고 의존 패키지인 certifi의
+# cacert.pem은 안 담아서 실행 시 FileNotFoundError로 기동이 죽었다(2026-09-24
+# 실측, 재부팅/신규설치 환경에서 재현).
+tmp_ret = collect_all('certifi')
+datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
 a = Analysis(
     ['agent_flow.py'],
