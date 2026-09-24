@@ -130,7 +130,8 @@
 처리::TELEGRAM.텔레그램사진업로드감지2
 {
   만약에(참)
-    함수.저장(download_file_name,photo.jpg)
+    함수.날짜(photo_ts,%Y%m%d%H%M%S)
+    함수.붙이기(download_file_name,notebookflow_,세션.photo_ts,.jpg)
     로그.출력(사진 업로드 감지 세션.download_file_id)
     전송.텔레그램파일메타조회
 }
