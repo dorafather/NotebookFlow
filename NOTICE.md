@@ -79,6 +79,33 @@ SOFTWARE.
 
 ---
 
+## OpenSSL
+
+Location: statically linked into `NotebookFlow.exe` (built via vcpkg, not
+vendored as source in this repository — see `libUtil/openssl-win-setup.md`).
+Used by `NotebookFlow/OutboundClient.cpp` so that outbound TLS connections
+are verified against NotebookFlow's own bundled CA certificate list
+(`NotebookFlow/cacert.pem`) rather than depending on the host Windows
+machine's own certificate store, which can be stale or unmaintained on
+older/neglected systems.
+
+```
+Copyright (c) 1998-2026 The OpenSSL Project Authors. All Rights Reserved.
+Licensed under the Apache License 2.0.
+```
+
+Full license text: https://github.com/openssl/openssl/blob/master/LICENSE.txt
+
+## Mozilla CA certificate bundle (`NotebookFlow/cacert.pem`)
+
+A snapshot of the root certificates trusted by the Mozilla root program,
+in the same format distributed by curl.se
+(https://curl.se/docs/caextract.html) and by the Python `certifi` package.
+Used by `OutboundClient.cpp` (see above) to validate TLS server certificates
+independently of the host OS's certificate store.
+
+---
+
 ## Python dependencies (agent-flow, ssh-flow, mcp-flow, file-ra)
 
 FastAPI, uvicorn, pydantic, paramiko, and other Python packages used by

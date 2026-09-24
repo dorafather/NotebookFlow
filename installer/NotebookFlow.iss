@@ -18,7 +18,7 @@
 ; 컴파일하면 ..\bin\ 아래 최신 산출물이 없을 수 있다.
 
 #define MyAppName "NotebookFlow"
-#define MyAppVersion "1.1.0"
+#define MyAppVersion "1.1.1"
 #define MyAppPublisher "dorafather"
 #define MyTrayExeName "bin\tray\tray-flow.exe"
 #define MyNotebookFlowExeName "bin\notebookflow\NotebookFlow.exe"
@@ -73,7 +73,12 @@ Source: "..\bin\onboarding\*"; DestDir: "{app}\bin\onboarding"; Flags: recursesu
 ; addr.ini/rest.sce 등 어떤 배포 경로에도 의존하지 않으므로(Main.cpp에서
 ; 확인됨 — SetCurrentDirectoryW/addr.ini 로딩보다 앞선 완전히 독립된
 ; 분기) {tmp}에서 실행해도 안전하다.
+; 2026-09-25: OutboundClient가 OS 인증서 저장소 대신 자체 번들 cacert.pem으로
+; TLS 검증을 하도록 바뀌면서, NotebookFlow.exe는 실행 파일 옆에서 이 파일을
+; 찾는다(exe 디렉터리 기준 절대경로 — CWD와 무관) — {tmp} 검증용 사본도
+; 반드시 같이 추출해야 한다.
 Source: "..\bin\notebookflow\NotebookFlow.exe"; DestDir: "{tmp}"; Flags: dontcopy
+Source: "..\bin\notebookflow\cacert.pem"; DestDir: "{tmp}"; Flags: dontcopy
 
 [Registry]
 ; [확정 설계] 자동시작 방식 1 — HKCU Run 키.

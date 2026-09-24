@@ -21,6 +21,12 @@ NotebookFlow/system.json
 build/
 build-util/
 build-installer/
+
+# ---- OpenSSL(vcpkg) 빌드 산출물 ----
+# NotebookFlow.exe가 OS 인증서 저장소 대신 자체 CA 번들로 TLS 검증하도록
+# 2026-09-25에 도입(libUtil/openssl-win-setup.md 참고). vcpkg로 로컬에서
+# 빌드하는 의존성이라 다른 build-util/ 산출물과 동일하게 커밋하지 않는다.
+libUtil/openssl-win/
 *.obj
 *.pdb
 *.ilk
