@@ -1,6 +1,6 @@
 [INFO]
 process=NotebookFlow
-version=v1.1.1
+version=v1.2.0
 
 [RA_ADDRESS]
 rag-ra=http://127.0.0.1:8420/rag/search
