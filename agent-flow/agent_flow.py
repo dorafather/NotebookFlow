@@ -33,6 +33,7 @@ import json
 import logging
 import os
 import subprocess
+import sys
 import time
 import uuid
 from contextlib import asynccontextmanager
@@ -51,8 +52,20 @@ logging.basicConfig(
 log = logging.getLogger("agent-flow")
 
 # ── 상수 ──────────────────────────────────────────────────────────
+# PyInstaller onedir로 얼린 실행 파일에서는 __file__이 exe 자신의 폴더가
+# 아니라 그 안의 _internal/ 폴더를 가리킨다(부트로더가 스크립트를 그
+# 안에서 압축 해제해 실행하기 때문) - "이 폴더 밑의 notebookflow/"라는
+# 원래 의도가 실제로는 "exe 폴더/notebookflow/"가 아니라
+# "exe 폴더/_internal/../notebookflow/" = "exe 폴더/notebookflow"가 아니라
+# 상위 폴더 계산이 한 단계 어긋나 "exe 폴더 자신의 하위" 잘못된 경로가
+# 되는 버그가 있었다(2026-09-25 실사용자 테스트로 재현 - "클루드코드"
+# 명령이 "cwd 디렉터리가 없습니다"로 항상 실패). sys.executable은 얼린
+# 상태여도 항상 실제 exe 파일 경로를 정확히 가리키므로 그 기준으로
+# 계산한다(PyInstaller 공식 관용구).
+_SELF_DIR = os.path.dirname(os.path.abspath(sys.executable)) if getattr(sys, "frozen", False) \
+    else os.path.dirname(os.path.abspath(__file__))
 _DEFAULT_CWD = os.path.normpath(
-    os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "notebookflow")
+    os.path.join(_SELF_DIR, "..", "notebookflow")
 )
 CWD = os.getenv("AGENT_CWD", _DEFAULT_CWD)
 TIMEOUT_SEC = int(os.getenv("AGENT_TIMEOUT_SEC", "600"))
