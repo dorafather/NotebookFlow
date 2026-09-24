@@ -198,7 +198,13 @@ begin
   // 추출해 둔 검증 전용 사본을 사용한다([Files]의 dontcopy 항목 참고) —
   // --verify-telegram 모드는 배포 경로에 의존하지 않으므로 {tmp}에서
   // 실행해도 동작이 동일하다.
+  // 2026-09-25: cacert.pem도 dontcopy로 등록해뒀는데 여기서 실제로
+  // ExtractTemporaryFile()을 안 불러서 {tmp}에 안 풀리는 버그가 있었다 -
+  // OutboundClient가 exe와 같은 폴더의 cacert.pem을 찾으므로, 이걸 빠뜨리면
+  // "SSL certificate loading failed"로 검증이 항상 실패한다(실사용자
+  // 테스트로 재현·확인).
   ExtractTemporaryFile('NotebookFlow.exe');
+  ExtractTemporaryFile('cacert.pem');
   ExePath := ExpandConstant('{tmp}\NotebookFlow.exe');
   Params := '--verify-telegram "' + Token + '" "' + ChatId + '"';
 
