@@ -86,6 +86,7 @@
     함수.앞자리비교(cmd_노티파이,수신메시지.result[0].message.text,노티파이)
     함수.앞자리비교(cmd_블루스카이,수신메시지.result[0].message.text,블루스카이)
     함수.앞자리비교(cmd_클루드코드,수신메시지.result[0].message.text,클루드코드)
+    함수.앞자리비교(cmd_클루드초기화,수신메시지.result[0].message.text,클루드초기화)
     함수.앞자리비교(cmd_텔넷,수신메시지.result[0].message.text,텔넷)
     함수.앞자리비교(cmd_파일,수신메시지.result[0].message.text,파일)
     함수.앞자리비교(cmd_사진,수신메시지.result[0].message.text,사진)
@@ -181,6 +182,8 @@
     처리.텔레그램블루스카이명령처리
   그외그외(세션.cmd_클루드코드 == 1)
     처리.텔레그램클루드코드명령처리
+  그외그외(세션.cmd_클루드초기화 == 1)
+    처리.텔레그램클루드초기화명령처리
   그외그외(세션.cmd_텔넷 == 1)
     처리.텔레그램텔넷명령처리
   그외그외(세션.cmd_파일 == 1)
@@ -351,6 +354,11 @@
     로그.출력(클루드 명령 실행 세션.cmd_rest)
     전송.클루드명령에코
     전송.클루드코드명령전송
+}
+처리::TELEGRAM.텔레그램클루드초기화명령처리
+{
+  만약에(참)
+    전송.클루드초기화명령전송
 }
 처리::TELEGRAM.텔레그램텔넷명령처리
 {
@@ -648,6 +656,16 @@
   전송메시지.주소.도메인 = 설정.AGENT.domain
   전송메시지.주소.경로 = 설정.AGENT.cmd_path
   전송메시지.instruction = 세션.cmd_rest
+  전송메시지.callback_chat_id = 수신메시지.result[0].message.chat.id
+  전송메시지.session_key = claude_persistent
+  전송메시지.agent_name = 설정.AGENT.agent_name
+}
+전송::TELEGRAM.클루드초기화명령전송
+{
+  전송메시지.메소드 = POST
+  전송메시지.주소.도메인 = 설정.AGENT.domain
+  전송메시지.주소.경로 = 설정.AGENT.reset_path
+  전송메시지.session_key = claude_persistent
   전송메시지.callback_chat_id = 수신메시지.result[0].message.chat.id
 }
 전송::TELEGRAM.클루드코드완료텔레그램전송

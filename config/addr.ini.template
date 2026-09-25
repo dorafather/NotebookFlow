@@ -1,6 +1,6 @@
 [INFO]
 process=NotebookFlow
-version=v1.2.1
+version=v1.3.0
 
 [RA_ADDRESS]
 rag-ra=http://127.0.0.1:8420/rag/search
@@ -23,7 +23,14 @@ telegram_alias=파일
 [AGENT]
 domain=http://127.0.0.1:8430
 cmd_path=/notebookflow/agent/execute
+reset_path=/notebookflow/agent/reset
 telegram_alias=클루드코드
+#agent_name을 비워두면 "클루드코드"는 평범한 Claude로 동작합니다. 설치
+#마법사에서 "전용 Claude Code 에이전트 생성"을 선택하면 자동으로
+#notebookflow-agent로 채워집니다(직접 값을 넣어 다른 에이전트를 지정해도
+#됩니다 - 그 이름의 에이전트가 실제로 등록되어 있어야 합니다, 없는
+#이름을 넣으면 "클루드코드" 호출 자체가 실패합니다).
+agent_name=
 
 [SSH]
 domain=http://127.0.0.1:8450

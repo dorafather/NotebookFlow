@@ -18,7 +18,7 @@
 ; 컴파일하면 ..\bin\ 아래 최신 산출물이 없을 수 있다.
 
 #define MyAppName "NotebookFlow"
-#define MyAppVersion "1.2.1"
+#define MyAppVersion "1.3.0"
 #define MyAppPublisher "dorafather"
 #define MyTrayExeName "bin\tray\tray-flow.exe"
 #define MyNotebookFlowExeName "bin\notebookflow\NotebookFlow.exe"
@@ -51,6 +51,14 @@ Name: "korean"; MessagesFile: "compiler:Languages\Korean.isl"
 ; [확정 설계] 기본 체크(ON) — checkedonce: 최초 설치 시엔 체크된 채로
 ; 시작하되, 이후 재설치/업그레이드 시엔 사용자가 이전에 끈 선택을 존중.
 Name: "autostart"; Description: "Windows 시작 시 NotebookFlow 자동 실행"; Flags: checkedonce
+; [2026-09-26 신규] 전용 Claude Code 에이전트(notebookflow-agent) 생성 —
+; 기본 체크(적극 권장): 이게 있어야 Telegram "클루드코드" 명령이 그냥
+; 평범한 Claude가 아니라 이 프로젝트의 rest.sce/CLAUDE.md를 아는 전담
+; 개발 담당자로 응답한다. 사용자의 전역 Claude Code 설정 폴더
+; (%USERPROFILE%\.claude\agents\)에 파일을 하나 추가하는 것이라, 원치
+; 않으면 체크 해제할 수 있게 둔다(동의 없이 강제하지 않는다는 이
+; 프로젝트의 기존 원칙과 동일).
+Name: "createclaudeagent"; Description: "전용 Claude Code 에이전트 생성 (Telegram ""클루드코드""로 자유롭게 대화하려면 권장)"; Flags: checkedonce
 
 [Files]
 Source: "..\bin\notebookflow\*"; DestDir: "{app}\bin\notebookflow"; Flags: recursesubdirs ignoreversion
@@ -267,6 +275,64 @@ begin
   end;
 end;
 
+// [2026-09-26] 위 함수와 같은 이유(Unicode-safe 줄 단위 치환)로, "키=<자리표시자>"가
+// 아니라 "키="(완전히 빈 값)인 줄을 채울 때 쓴다 — config/addr.ini.template의
+// agent_name=(빈 값, 자리표시자 없음)이 여기 해당한다. 정확히 "키=" 뒤에
+// 아무것도 없는 줄만 매치해서, 이미 값이 채워진 줄(재설치 등)은 건드리지 않는다.
+procedure ReplaceIniEmptyValueLine(var Lines: TArrayOfString; const KeyAscii: String;
+  const NewValueAscii: String);
+var
+  I: Integer;
+begin
+  for I := 0 to GetArrayLength(Lines) - 1 do
+  begin
+    if Lines[I] = KeyAscii + '=' then
+      Lines[I] := KeyAscii + '=' + NewValueAscii;
+  end;
+end;
+
+// [2026-09-26] "전용 Claude Code 에이전트 생성" 작업이 선택됐을 때 실행 —
+// (a) notebookflow-agent-template.md를 사용자의 전역 Claude Code 설정 폴더
+//     (%USERPROFILE%\.claude\agents\)에 복사(이미 있으면 손대지 않음 —
+//     사용자가 직접 커스터마이즈했을 수 있으므로 덮어쓰지 않는다)
+// (b) config\addr.ini.template의 agent_name= 빈 줄을 notebookflow-agent로
+//     채워서, 이후 addr.ini가 언제 만들어지든(설치 중 즉시 생성되든,
+//     NotebookFlow.exe 최초 실행 시 자동 생성되든) 그 값이 반영되게 한다.
+procedure SetupClaudeAgent;
+var
+  AgentsDir, TargetPath, SourcePath, TemplatePath: String;
+  Lines: TArrayOfString;
+begin
+  AgentsDir := GetEnv('USERPROFILE') + '\.claude\agents';
+  TargetPath := AgentsDir + '\notebookflow-agent.md';
+  SourcePath := ExpandConstant('{app}\bin\notebookflow\notebookflow-agent-template.md');
+
+  if not FileExists(TargetPath) then
+  begin
+    if not ForceDirectories(AgentsDir) then
+    begin
+      MsgBox('Claude Code 에이전트 폴더(' + AgentsDir + ')를 만들지 못해 ' +
+        '전용 에이전트를 등록하지 못했습니다. NotebookFlow 사용에는 지장이 ' +
+        '없습니다 - "클루드코드" 명령은 평범한 Claude로 계속 동작합니다.',
+        mbInformation, MB_OK);
+      Exit;
+    end;
+    if not FileCopy(SourcePath, TargetPath, False) then
+    begin
+      MsgBox('전용 Claude Code 에이전트 파일을 복사하지 못했습니다. ' +
+        'NotebookFlow 사용에는 지장이 없습니다.', mbInformation, MB_OK);
+      Exit;
+    end;
+  end;
+
+  TemplatePath := ExpandConstant('{app}\bin\config\addr.ini.template');
+  if LoadStringsFromFile(TemplatePath, Lines) then
+  begin
+    ReplaceIniEmptyValueLine(Lines, 'agent_name', 'notebookflow-agent');
+    SaveStringsToFile(TemplatePath, Lines, False);
+  end;
+end;
+
 procedure CurStepChanged(CurStep: TSetupStep);
 var
   Guide: TStringList;
@@ -277,6 +343,13 @@ var
 begin
   if CurStep = ssPostInstall then
   begin
+    // [2026-09-26] addr.ini 생성(아래)보다 먼저 실행해야 한다 - 이 함수가
+    // addr.ini.template의 agent_name= 줄을 먼저 채워두면, 바로 아래에서
+    // 그 템플릿을 읽어 addr.ini를 만들 때(또는 나중에 NotebookFlow.exe가
+    // 최초 실행 시 스스로 만들 때) 이미 채워진 값 그대로 반영된다.
+    if WizardIsTaskSelected('createclaudeagent') then
+      SetupClaudeAgent;
+
     // [4. 검증 통과한 값을 addr.ini에 반영] config/addr.ini.template의
     // [TELEGRAM] 섹션 bot_token/my_chat_id 자리를 채워 넣은 뒤
     // {app}\bin\notebookflow\addr.ini로 저장. 건너뛴 경우(TelegramVerified
@@ -333,6 +406,14 @@ begin
         Guide.Add('    ' + ExpandConstant('{app}\bin\notebookflow\addr.ini'));
       end;
       Guide.Add('');
+      if WizardIsTaskSelected('createclaudeagent') then
+      begin
+        Guide.Add('■ 전용 Claude Code 에이전트');
+        Guide.Add('  Telegram의 "클루드코드 [지시]" 명령이 이제 이 프로젝트를 아는');
+        Guide.Add('  전담 개발 담당자로 응답합니다(대화도 계속 이어집니다). 나중에');
+        Guide.Add('  "클루드초기화"라고 보내면 언제든 새로 시작할 수 있습니다.');
+        Guide.Add('');
+      end;
       Guide.Add('■ 더 자세한 안내');
       Guide.Add('  ' + ExpandConstant('{app}\bin\onboarding\welcome.md') + ' 파일을 열어보세요.');
       GuidePath := ExpandConstant('{app}\설치후_안내.txt');

@@ -10,6 +10,11 @@
 NotebookFlow/addr.ini
 addr.ini
 
+# 2026-09-26: "클루드코드" 지속 세션 실험(dorafather 개인 개발 환경 전용,
+# 절대 배포 안 함) 런타임 상태 - 실제 Claude 세션 UUID를 담고 있어 커밋 금지.
+NotebookFlow/agent_flow_sessions.json
+agent_flow_sessions.json
+
 # addr.ini 리팩터링 이전에 쓰이던 죽은 설정 파일들 - Main.cpp가 더 이상 로드하지
 # 않는데도(addr.ini만 로드) 실제 Telegram/Discord/Slack/GitHub/Notion 자격증명이
 # 하드코딩된 채 남아있음. 삭제는 이번 티켓 범위 밖이라 커밋 제외만 처리.
