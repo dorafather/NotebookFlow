@@ -1,6 +1,13 @@
 [INFO]
 process=NotebookFlow
-version=v1.3.0
+version=v1.4.0
+#install_hour는 NotebookFlow.exe가 최초 부팅 시 1회만 자동으로 채워줍니다
+#(직접 입력하지 마세요 - 값이 있으면 절대 덮어쓰지 않습니다).
+#last_applied_version은 "업데이트" 명령으로 공식 저장소 내용을 반영할
+#때마다 Claude Code가 자동으로 갱신합니다(직접 입력할 필요 없음 - 비워두면
+#첫 자동 확인 때는 조용히 넘어가고, "업데이트"를 한 번이라도 실행하면 그때
+#기록됩니다).
+last_applied_version=
 
 [RA_ADDRESS]
 rag-ra=http://127.0.0.1:8420/rag/search
@@ -95,6 +102,17 @@ domain=https://api.github.com
 category=조회
 telegram_alias=깃허브
 
+#NotebookFlow 자신의 공식 배포 업데이트 확인/반영 기능 전용 섹션입니다
+#(당신 자신의 GitHub 저장소가 아니라 dorafather/NotebookFlow 공식 저장소를
+#가리킵니다 - CLAUDE.md 1.15절 참고). GITHUB 섹션과 도메인은 같지만, 이
+#기능만의 독립된 STATE 라우팅을 위해 별도 네임스페이스로 분리했습니다.
+[UPDATE]
+domain=https://api.github.com
+telegram_alias=업데이트
+
+[UPDATE_DL]
+domain=https://raw.githubusercontent.com
+
 [SLACK]
 webhook_url=<여기에 Slack Webhook URL을 입력하세요>
 domain=https://hooks.slack.com
@@ -120,6 +138,16 @@ domain=https://api.linear.app
 [NOTION]
 token=<여기에 Notion Integration Token을 입력하세요>
 domain=https://api.notion.com
+
+#공공데이터포털(data.go.kr)의 "금융위원회_주식시세정보" API에서 본인
+#명의로 발급받은 서비스키가 필요합니다(무료, 개인별 발급 - 이 값을
+#다른 사람과 공유하거나 재배포하지 마세요). threshold는 전일 대비
+#등락률 알림 기준(%)이며, 비워두면 기본 5%가 적용됩니다.
+[KRX]
+service_key=<여기에 공공데이터포털에서 발급받은 본인의 서비스키를 입력하세요>
+domain=https://apis.data.go.kr/1160100/GetStockSecuritiesInfoService_V2
+threshold=5
+telegram_alias=주식
 
 [TRACE]
 name=TELEGRAM

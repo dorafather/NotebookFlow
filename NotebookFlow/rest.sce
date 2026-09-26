@@ -11,6 +11,13 @@
   FLOW.수신메시지.이벤트명 == 깃허브이슈폴링    처리.깃허브이슈폴링처리
   FLOW.수신메시지.이벤트명 == NF봇타이머    처리.NF봇핑전송
   FLOW.수신메시지.이벤트명 == NF봇그룹메시지전송    처리.NF봇그룹메시지직접트리거
+  FLOW.수신메시지.이벤트명 == 업데이트확인틱    처리.업데이트확인처리
+  UPDATE.수신메시지.응답코드 == 200    처리.업데이트버전확인응답처리
+  UPDATE.수신메시지.응답코드 == 403    처리.업데이트확인실패처리
+  UPDATE.수신메시지.응답코드 == 404    처리.업데이트확인실패처리
+  UPDATE_DL.수신메시지.저장모드 == 1    처리.업데이트파일다운로드완료처리
+  FLOW.수신메시지.이벤트명 == 주식감시틱    처리.주식관심종목감시처리
+  KRX.수신메시지.응답코드 == 200    처리.KRX응답분기처리
   TELEGRAM.수신메시지.이벤트명 == 텔레그램타이머    처리.텔레그램핑전송
   TELEGRAM.수신메시지.이벤트명 == 텔레그램환영타이머    처리.텔레그램환영처리
   TELEGRAM.수신메시지.ok == 1    처리.텔레그램수신처리
@@ -35,6 +42,9 @@
     처리.텔레그램초기화
     처리.깃허브이슈기준선설정
     처리.NF봇초기화
+    타이머.업데이트확인타이머
+    처리.주식관심종목초기화
+    타이머.주식감시타이머
 }
 처리::FLOW.클루드코드완료처리
 {
@@ -42,6 +52,55 @@
     함수.저장(agent_chat_id,수신메시지.chat_id)
     함수.저장(agent_result,수신메시지.result)
     전송.클루드코드완료텔레그램전송
+}
+처리::FLOW.업데이트확인처리
+{
+  만약에(참)
+    함수.날짜(update_check_hour,%H)
+    타이머.업데이트확인타이머
+    처리.업데이트확인시각비교
+}
+처리::FLOW.업데이트확인시각비교
+{
+  만약에(세션.update_check_hour == 설정.INFO.install_hour)
+    함수.저장(update_mode,확인)
+    함수.저장(gh_token,설정.GITHUB.token)
+    전송.업데이트버전확인전송
+  그외
+    로그.출력(업데이트 확인 스킵 - 시각 불일치)
+}
+처리::UPDATE.업데이트버전확인응답처리
+{
+  만약에(세션.update_mode == 확인) 그리고(수신메시지.sha != 설정.INFO.last_applied_version) 그리고(설정.INFO.last_applied_version != NULL)
+    함수.저장(update_new_sha,수신메시지.sha)
+    전송.업데이트알림텔레그램전송
+  그외그외(세션.update_mode == 실행)
+    함수.저장(update_new_sha,수신메시지.sha)
+    함수.저장(update_dl_step,1)
+    전송.업데이트파일1다운로드
+  그외
+    로그.출력(업데이트 확인 - 새 버전 없음 또는 기준선 없음)
+}
+처리::UPDATE.업데이트확인실패처리
+{
+  만약에(참)
+    로그.출력(업데이트 버전 확인 실패 수신메시지.message)
+}
+처리::UPDATE.업데이트파일다운로드완료처리
+{
+  만약에(세션.update_dl_step == 1)
+    함수.저장(update_dl_step,2)
+    전송.업데이트파일2다운로드
+  그외
+    전송.업데이트에이전트명령전송
+}
+처리::TELEGRAM.텔레그램업데이트명령처리
+{
+  만약에(참)
+    함수.저장(update_mode,실행)
+    함수.저장(gh_token,설정.GITHUB.token)
+    전송.델레그램응답전송
+    전송.업데이트버전확인전송
 }
 처리::TELEGRAM.텔레그램초기화
 {
@@ -91,6 +150,8 @@
     함수.앞자리비교(cmd_파일,수신메시지.result[0].message.text,파일)
     함수.앞자리비교(cmd_사진,수신메시지.result[0].message.text,사진)
     함수.앞자리비교(cmd_고객문의,수신메시지.result[0].message.text,고객문의)
+    함수.앞자리비교(cmd_업데이트,수신메시지.result[0].message.text,업데이트)
+    함수.앞자리비교(cmd_주식,수신메시지.result[0].message.text,주식)
     처리.텔레그램수신메시지분기
   그외
     함수.더하기(tg_offset,수신메시지.result[0].update_id,1)
@@ -192,6 +253,10 @@
     처리.텔레그램사진명령처리
   그외그외(세션.cmd_고객문의 == 1)
     처리.텔레그램고객문의명령처리
+  그외그외(세션.cmd_업데이트 == 1)
+    처리.텔레그램업데이트명령처리
+  그외그외(세션.cmd_주식 == 1)
+    처리.텔레그램주식명령처리
   그외
     전송.델레그램응답전송
 }
@@ -707,6 +772,11 @@
   전송메시지.이벤트명 = NF봇타이머
   전송메시지.시간 = 60000
 }
+타이머::UPDATE.업데이트확인타이머
+{
+  전송메시지.이벤트명 = 업데이트확인틱
+  전송메시지.시간 = 3600000
+}
 전송::TELEGRAM.텔레그램폴
 {
   전송메시지.메소드 = GET
@@ -881,6 +951,49 @@
   전송메시지.주소.파라미터[0].val = 설정.TELEGRAM.my_chat_id
   전송메시지.주소.파라미터[1].key = text
   전송메시지.주소.파라미터[1].val = 문장.깃허브이슈등록실패문장
+}
+전송::UPDATE.업데이트버전확인전송
+{
+  전송메시지.메소드 = GET
+  전송메시지.주소.도메인 = 설정.UPDATE.domain
+  전송메시지.주소.경로 = /repos/dorafather/NotebookFlow/commits/main
+  전송메시지.헤더[0].key = Authorization
+  전송메시지.헤더[0].val = 문장.업데이트깃허브인증값
+  전송메시지.헤더[1].key = User-Agent
+  전송메시지.헤더[1].val = NotebookFlow
+}
+전송::UPDATE.업데이트알림텔레그램전송
+{
+  전송메시지.메소드 = GET
+  전송메시지.주소.도메인 = 설정.TELEGRAM.domain
+  전송메시지.주소.경로 = 문장.텔레그램응답경로
+  전송메시지.주소.파라미터[0].key = chat_id
+  전송메시지.주소.파라미터[0].val = 설정.TELEGRAM.my_chat_id
+  전송메시지.주소.파라미터[1].key = text
+  전송메시지.주소.파라미터[1].val = 문장.업데이트알림문장
+}
+전송::UPDATE.업데이트파일1다운로드
+{
+  전송메시지.메소드 = GET
+  전송메시지.주소.도메인 = 설정.UPDATE_DL.domain
+  전송메시지.주소.경로 = /dorafather/NotebookFlow/main/NotebookFlow/rest.sce
+  전송메시지.저장.파일명 = official_rest.sce
+}
+전송::UPDATE.업데이트파일2다운로드
+{
+  전송메시지.메소드 = GET
+  전송메시지.주소.도메인 = 설정.UPDATE_DL.domain
+  전송메시지.주소.경로 = /dorafather/NotebookFlow/main/CLAUDE.md
+  전송메시지.저장.파일명 = official_CLAUDE.md
+}
+전송::UPDATE.업데이트에이전트명령전송
+{
+  전송메시지.메소드 = POST
+  전송메시지.주소.도메인 = 설정.AGENT.domain
+  전송메시지.주소.경로 = 설정.AGENT.cmd_path
+  전송메시지.instruction = 문장.업데이트지시문장
+  전송메시지.callback_chat_id = 설정.TELEGRAM.my_chat_id
+  전송메시지.agent_name = 설정.AGENT.agent_name
 }
 전송::LINEAR.sndLinearIssue
 {
@@ -1076,6 +1189,7 @@ dorafather와 샛별이가 여러분의 이슈에 적극적으로 소통할 것�
  파일 얻기 [경로]     - 로컬 파일을 전송받기
  파일 폴더 [경로]     - 로컬 폴더 목록 조회(최대 20개)
  사진 얻기 [경로]     - 로컬 파일을 전송받기
+ 주식 관심종목 추가/삭제/조회 [종목명] - 관심종목 등락 감시(전일 기준, ±5% 기본)
 
 불편한 점이나 버그, 아이디어가 있으면 Claude Code에게 "GitHub에 이슈로 등록해줘"라고 말씀해주세요.
 }
@@ -1117,6 +1231,38 @@ dorafather와 샛별이가 여러분의 이슈에 적극적으로 소통할 것�
 {GitHub 이슈 등록 실패: $$$세션.issue_reg_error$$$ (addr.ini의 GITHUB.token 권한을 확인해주세요)}
 문장::GITHUB.깃허브텔레그램이슈등록본문문장
 {Telegram "깃허브 이슈등록" 명령으로 등록된 이슈입니다. (chat_id: $$$세션.pending_reply_chat_id$$$)}
+문장::UPDATE.업데이트깃허브인증값
+{token $$$세션.gh_token$$$}
+문장::UPDATE.업데이트알림문장
+{NotebookFlow 공식 저장소에 새로운 업데이트가 있습니다. '업데이트'라고 답하면 반영을 시작합니다. (최신 커밋: $$$세션.update_new_sha$$$)}
+문장::UPDATE.업데이트지시문장
+{NotebookFlow 공식 저장소(dorafather/NotebookFlow)의 최신 커밋($$$세션.update_new_sha$$$)
+기준 공식 배포 파일이 이미 이 작업 디렉터리의 downloads 폴더에
+다운로드되어 있다:
+- downloads/official_rest.sce (공식 최신 rest.sce)
+- downloads/official_CLAUDE.md (공식 최신 CLAUDE.md, 저장소 루트 파일)
+
+작업 순서:
+1) 이 작업 디렉터리의 rest.sce와 downloads/official_rest.sce를 비교해서,
+   공식 Default 카탈로그(서비스별 처리::/전송::/타이머::/문장:: 블록)
+   변경분만 반영해라. addr.ini의 실제 토큰/시크릿 값과, 이 로컬 rest.sce
+   안에서 공식 저장소에는 없는 이름으로 사용자가 직접 추가한 것으로
+   보이는 커스텀 블록(개인 SSH 서버 대상, 개인 커스텀 명령 등)은 절대
+   건드리지 마라.
+2) 상위 폴더의 CLAUDE.md를 downloads/official_CLAUDE.md와 비교해서
+   갱신해라. 이 작업 디렉터리 밖이라 접근이 안 되면(샌드박스 제한으로
+   상위 폴더가 안 보일 수 있다), 억지로 시도하지 말고 그 사실을 그대로
+   요약에 남겨라.
+3) 새 Telegram 명령이 추가됐다면 help.json도 함께 갱신해라.
+4) GitHub API를 직접 호출하거나 git 명령을 실행하지 마라 - 이미 받아둔
+   downloads/official_* 파일만 보고 비교하면 충분하다(Read/Edit/Write
+   도구만 사용, Bash나 네트워크 조회는 필요 없다).
+5) 작업을 마친 뒤 addr.ini의 [INFO] 섹션 last_applied_version 값을
+   $$$세션.update_new_sha$$$ 로 갱신해라(토큰/시크릿이 아닌 버전 기록용
+   필드라 안전하게 덮어써도 된다. 값이 이미 있어도 그대로 새 값으로
+   교체해라).
+6) 무엇을 반영했고 무엇은 보존했는지, CLAUDE.md는 실제로 갱신했는지
+   여부를 포함해서 한국어로 간단히 요약해서 답해라.}
 문장::LINEAR.stmtLinearQuery
 {$$$<$$$ issues(first: 10) $$$<$$$ nodes $$$<$$$ id title identifier state $$$<$$$ name $$$>$$$ $$$>$$$ $$$>$$$ $$$>$$$}
 문장::BSKY.bskyPostPath
@@ -1131,4 +1277,401 @@ dorafather와 샛별이가 여러분의 이슈에 적극적으로 소통할 것�
 {$$$세션.bsky_now$$$+09:00}
 문장::NOTION.buildNotionAuth
 {Bearer $$$설정.NOTION.token$$$}
+처리::FLOW.주식관심종목초기화
+{
+  만약에(참)
+    함수.저장(krx_watch_csv,없음)
+    함수.저장(krx_seed_found,0)
+    처리.주식시드확인1
+}
+처리::FLOW.주식시드확인1
+{
+  만약에(설정.KRX_WATCHLIST.종목1 != NULL) 그리고(세션.krx_seed_found != 1)
+    함수.저장(krx_watch_csv,설정.KRX_WATCHLIST.종목1)
+    함수.저장(krx_seed_found,1)
+    처리.주식시드확인2
+  그외그외(설정.KRX_WATCHLIST.종목1 != NULL)
+    함수.붙이기(krx_watch_csv,",",설정.KRX_WATCHLIST.종목1)
+    처리.주식시드확인2
+  그외
+    처리.주식시드확인2
+}
+처리::FLOW.주식시드확인2
+{
+  만약에(설정.KRX_WATCHLIST.종목2 != NULL) 그리고(세션.krx_seed_found != 1)
+    함수.저장(krx_watch_csv,설정.KRX_WATCHLIST.종목2)
+    함수.저장(krx_seed_found,1)
+    처리.주식시드확인3
+  그외그외(설정.KRX_WATCHLIST.종목2 != NULL)
+    함수.붙이기(krx_watch_csv,",",설정.KRX_WATCHLIST.종목2)
+    처리.주식시드확인3
+  그외
+    처리.주식시드확인3
+}
+처리::FLOW.주식시드확인3
+{
+  만약에(설정.KRX_WATCHLIST.종목3 != NULL) 그리고(세션.krx_seed_found != 1)
+    함수.저장(krx_watch_csv,설정.KRX_WATCHLIST.종목3)
+    함수.저장(krx_seed_found,1)
+    처리.주식시드확인4
+  그외그외(설정.KRX_WATCHLIST.종목3 != NULL)
+    함수.붙이기(krx_watch_csv,",",설정.KRX_WATCHLIST.종목3)
+    처리.주식시드확인4
+  그외
+    처리.주식시드확인4
+}
+처리::FLOW.주식시드확인4
+{
+  만약에(설정.KRX_WATCHLIST.종목4 != NULL) 그리고(세션.krx_seed_found != 1)
+    함수.저장(krx_watch_csv,설정.KRX_WATCHLIST.종목4)
+    함수.저장(krx_seed_found,1)
+    처리.주식시드확인5
+  그외그외(설정.KRX_WATCHLIST.종목4 != NULL)
+    함수.붙이기(krx_watch_csv,",",설정.KRX_WATCHLIST.종목4)
+    처리.주식시드확인5
+  그외
+    처리.주식시드확인5
+}
+처리::FLOW.주식시드확인5
+{
+  만약에(설정.KRX_WATCHLIST.종목5 != NULL) 그리고(세션.krx_seed_found != 1)
+    함수.저장(krx_watch_csv,설정.KRX_WATCHLIST.종목5)
+    함수.저장(krx_seed_found,1)
+    로그.출력(주식 관심종목 시드 로딩 완료)
+  그외그외(설정.KRX_WATCHLIST.종목5 != NULL)
+    함수.붙이기(krx_watch_csv,",",설정.KRX_WATCHLIST.종목5)
+    로그.출력(주식 관심종목 시드 로딩 완료)
+  그외
+    로그.출력(주식 관심종목 시드 로딩 완료)
+}
+처리::FLOW.주식관심종목감시처리
+{
+  만약에(참)
+    함수.저장(krx_mode,폴링단건)
+    타이머.주식감시타이머
+    처리.주식관심종목순회시작
+}
+처리::TELEGRAM.텔레그램주식명령처리
+{
+  만약에(참)
+    함수.단어분리(cmd_word_list,수신메시지.result[0].message.text)
+    함수.단어합치기(cmd_rest,세션.리스트.cmd_word_list,1)
+    함수.앞자리비교(cmd_관심종목,세션.cmd_rest,관심종목)
+    처리.텔레그램주식명령분기
+}
+처리::TELEGRAM.텔레그램주식명령분기
+{
+  만약에(세션.cmd_관심종목 == 1)
+    처리.텔레그램주식관심종목명령처리
+  그외
+    전송.델레그램응답전송
+}
+처리::TELEGRAM.텔레그램주식관심종목명령처리
+{
+  만약에(참)
+    함수.단어분리(cmd_word_list2,세션.cmd_rest)
+    함수.단어합치기(cmd_rest2,세션.리스트.cmd_word_list2,1)
+    함수.앞자리비교(cmd_추가,세션.cmd_rest2,추가)
+    함수.앞자리비교(cmd_삭제,세션.cmd_rest2,삭제)
+    함수.앞자리비교(cmd_조회,세션.cmd_rest2,조회)
+    처리.텔레그램주식관심종목명령분기
+}
+처리::TELEGRAM.텔레그램주식관심종목명령분기
+{
+  만약에(세션.cmd_추가 == 1)
+    함수.저장(pending_reply_chat_id,수신메시지.result[0].message.chat.id)
+    처리.텔레그램주식관심종목추가명령처리
+  그외그외(세션.cmd_삭제 == 1)
+    함수.저장(pending_reply_chat_id,수신메시지.result[0].message.chat.id)
+    처리.텔레그램주식관심종목삭제명령처리
+  그외그외(세션.cmd_조회 == 1)
+    함수.저장(pending_reply_chat_id,수신메시지.result[0].message.chat.id)
+    처리.텔레그램주식관심종목조회명령처리
+  그외
+    전송.델레그램응답전송
+}
+처리::TELEGRAM.텔레그램주식관심종목추가명령처리
+{
+  만약에(참)
+    함수.단어분리(cmd_word_list3,세션.cmd_rest2)
+    함수.단어합치기(krx_target_name,세션.리스트.cmd_word_list3,1)
+    함수.저장(krx_mode,검색)
+    전송.KRX종목검색전송
+}
+처리::TELEGRAM.텔레그램주식관심종목삭제명령처리
+{
+  만약에(참)
+    함수.단어분리(cmd_word_list4,세션.cmd_rest2)
+    함수.단어합치기(krx_target_name,세션.리스트.cmd_word_list4,1)
+    함수.저장(krx_del_match_prefix,세션.krx_target_name)
+    함수.붙이기(krx_del_match_prefix,:)
+    함수.쪼개기(krx_watch_list,세션.krx_watch_csv,",")
+    함수.저장(krx_del_idx,0)
+    함수.저장(krx_del_found,0)
+    함수.저장(krx_new_csv,없음)
+    함수.저장(krx_new_found,0)
+    처리.주식관심종목삭제순회
+}
+처리::KRX.주식관심종목삭제순회
+{
+  만약에(세션.krx_del_idx >= 세션.리스트.krx_watch_list.SIZE)
+    처리.주식관심종목삭제완료
+  그외
+    처리.주식관심종목삭제항목검사
+}
+처리::KRX.주식관심종목삭제항목검사
+{
+  만약에(세션.리스트.krx_watch_list[세션.krx_del_idx] === 세션.krx_del_match_prefix)
+    함수.더하기(krx_del_found,세션.krx_del_found,1)
+    함수.더하기(krx_del_idx,세션.krx_del_idx,1)
+    처리.주식관심종목삭제순회
+  그외
+    처리.주식관심종목삭제보존
+}
+처리::KRX.주식관심종목삭제보존
+{
+  만약에(세션.krx_new_found == 0)
+    함수.저장(krx_new_csv,세션.리스트.krx_watch_list[세션.krx_del_idx])
+    함수.저장(krx_new_found,1)
+    함수.더하기(krx_del_idx,세션.krx_del_idx,1)
+    처리.주식관심종목삭제순회
+  그외
+    함수.붙이기(krx_new_csv,",",세션.리스트.krx_watch_list[세션.krx_del_idx])
+    함수.더하기(krx_del_idx,세션.krx_del_idx,1)
+    처리.주식관심종목삭제순회
+}
+처리::KRX.주식관심종목삭제완료
+{
+  만약에(세션.krx_del_found > 0)
+    함수.저장(krx_watch_csv,세션.krx_new_csv)
+    함수.저장(krx_reply_text,문장.주식관심종목삭제완료문장)
+    전송.주식관심종목응답전송
+  그외
+    함수.저장(krx_reply_text,문장.주식관심종목삭제실패문장)
+    전송.주식관심종목응답전송
+}
+처리::TELEGRAM.텔레그램주식관심종목조회명령처리
+{
+  만약에(참)
+    함수.저장(krx_mode,조회단건)
+    처리.주식관심종목순회시작
+}
+처리::KRX.주식관심종목순회시작
+{
+  만약에(세션.krx_watch_csv == 없음)
+    함수.저장(krx_walk_lines,없음)
+    처리.주식관심종목순회완료
+  그외
+    함수.쪼개기(krx_watch_list,세션.krx_watch_csv,",")
+    함수.저장(krx_walk_idx,0)
+    함수.저장(krx_walk_found,0)
+    함수.저장(krx_walk_lines,없음)
+    처리.주식관심종목순회다음
+}
+처리::KRX.주식관심종목순회다음
+{
+  만약에(세션.krx_walk_idx >= 세션.리스트.krx_watch_list.SIZE)
+    처리.주식관심종목순회완료
+  그외
+    함수.쪼개기(krx_item_parts,세션.리스트.krx_watch_list[세션.krx_walk_idx],:)
+    함수.저장(krx_walk_name,세션.리스트.krx_item_parts[0])
+    함수.저장(krx_walk_code,세션.리스트.krx_item_parts[1])
+    전송.KRX시세조회전송
+}
+처리::KRX.주식관심종목순회완료
+{
+  만약에(세션.krx_mode == 조회단건) 그리고(세션.krx_walk_lines != 없음)
+    함수.저장(krx_reply_text,세션.krx_walk_lines)
+    전송.주식관심종목응답전송
+  그외그외(세션.krx_mode == 조회단건)
+    함수.저장(krx_reply_text,문장.주식관심종목조회빈목록문장)
+    전송.주식관심종목응답전송
+  그외그외(세션.krx_mode == 폴링단건) 그리고(세션.krx_walk_lines != 없음)
+    함수.저장(krx_watch_alert_text,세션.krx_walk_lines)
+    전송.주식감시알림텔레그램전송
+  그외
+    로그.출력(주식 관심종목 감시 - 임계값 초과 종목 없음, 알림 생략)
+}
+처리::KRX.KRX응답분기처리
+{
+  만약에(세션.krx_mode == 검색)
+    함수.객체저장(krx_search_items,수신메시지.response.body.items.item)
+    함수.저장(krx_search_idx,0)
+    처리.주식종목검색순회
+  그외그외(세션.krx_mode == 조회단건)
+    함수.객체저장(krx_price_items,수신메시지.response.body.items.item)
+    처리.주식관심종목조회단건처리
+  그외그외(세션.krx_mode == 폴링단건)
+    함수.객체저장(krx_price_items,수신메시지.response.body.items.item)
+    처리.주식감시단건처리
+  그외
+    로그.출력(KRX 알 수 없는 응답 모드)
+}
+처리::KRX.주식종목검색순회
+{
+  만약에(세션.객체.krx_search_items[세션.krx_search_idx].itmsNm == NULL)
+    처리.주식종목검색실패
+  그외그외(세션.객체.krx_search_items[세션.krx_search_idx].itmsNm == 세션.krx_target_name)
+    함수.저장(krx_resolved_code,세션.객체.krx_search_items[세션.krx_search_idx].srtnCd)
+    처리.주식종목검색성공
+  그외
+    함수.더하기(krx_search_idx,세션.krx_search_idx,1)
+    처리.주식종목검색순회
+}
+처리::KRX.주식종목검색성공
+{
+  만약에(세션.krx_watch_csv == 없음)
+    함수.저장(krx_watch_csv,세션.krx_target_name)
+    함수.붙이기(krx_watch_csv,:,세션.krx_resolved_code)
+    함수.저장(krx_reply_text,문장.주식관심종목추가완료문장)
+    전송.주식관심종목응답전송
+  그외
+    함수.붙이기(krx_watch_csv,",",세션.krx_target_name,:,세션.krx_resolved_code)
+    함수.저장(krx_reply_text,문장.주식관심종목추가완료문장)
+    전송.주식관심종목응답전송
+}
+처리::KRX.주식종목검색실패
+{
+  만약에(참)
+    함수.저장(krx_reply_text,문장.주식관심종목검색실패문장)
+    전송.주식관심종목응답전송
+}
+처리::KRX.주식관심종목조회단건처리
+{
+  만약에(세션.객체.krx_price_items[0].clpr == NULL)
+    함수.더하기(krx_walk_idx,세션.krx_walk_idx,1)
+    처리.주식관심종목순회다음
+  그외
+    함수.저장(krx_line_name,세션.객체.krx_price_items[0].itmsNm)
+    함수.저장(krx_line_price,세션.객체.krx_price_items[0].clpr)
+    함수.저장(krx_line_rate,세션.객체.krx_price_items[0].fltRt)
+    처리.주식관심종목조회라인추가
+}
+처리::KRX.주식관심종목조회라인추가
+{
+  만약에(세션.krx_walk_found == 0)
+    함수.저장(krx_walk_lines,문장.KRX주식시세라인문장)
+    함수.저장(krx_walk_found,1)
+    함수.더하기(krx_walk_idx,세션.krx_walk_idx,1)
+    처리.주식관심종목순회다음
+  그외
+    함수.붙이기(krx_walk_lines,|,문장.KRX주식시세라인문장)
+    함수.더하기(krx_walk_idx,세션.krx_walk_idx,1)
+    처리.주식관심종목순회다음
+}
+처리::KRX.주식감시단건처리
+{
+  만약에(세션.객체.krx_price_items[0].fltRt == NULL)
+    함수.더하기(krx_walk_idx,세션.krx_walk_idx,1)
+    처리.주식관심종목순회다음
+  그외
+    함수.저장(krx_line_name,세션.객체.krx_price_items[0].itmsNm)
+    함수.저장(krx_line_price,세션.객체.krx_price_items[0].clpr)
+    함수.저장(krx_line_rate,세션.객체.krx_price_items[0].fltRt)
+    함수.부분비교(krx_is_neg,세션.krx_line_rate,-)
+    처리.주식감시부호분기
+}
+처리::KRX.주식감시부호분기
+{
+  만약에(세션.krx_is_neg == 1)
+    함수.추출(krx_rate_abs,세션.krx_line_rate,1,10)
+    처리.주식감시임계값비교
+  그외
+    함수.저장(krx_rate_abs,세션.krx_line_rate)
+    처리.주식감시임계값비교
+}
+처리::KRX.주식감시임계값비교
+{
+  만약에(세션.krx_rate_abs >= 설정.KRX.threshold)
+    처리.주식감시라인추가
+  그외
+    함수.더하기(krx_walk_idx,세션.krx_walk_idx,1)
+    처리.주식관심종목순회다음
+}
+처리::KRX.주식감시라인추가
+{
+  만약에(세션.krx_walk_found == 0)
+    함수.저장(krx_walk_lines,문장.KRX주식감시알림라인문장)
+    함수.저장(krx_walk_found,1)
+    함수.더하기(krx_walk_idx,세션.krx_walk_idx,1)
+    처리.주식관심종목순회다음
+  그외
+    함수.붙이기(krx_walk_lines,|,문장.KRX주식감시알림라인문장)
+    함수.더하기(krx_walk_idx,세션.krx_walk_idx,1)
+    처리.주식관심종목순회다음
+}
+전송::KRX.KRX종목검색전송
+{
+  전송메시지.메소드 = GET
+  전송메시지.주소.도메인 = 설정.KRX.domain
+  전송메시지.주소.경로 = /getStockPriceInfo_V2
+  전송메시지.주소.파라미터[0].key = serviceKey
+  전송메시지.주소.파라미터[0].val = 설정.KRX.service_key
+  전송메시지.주소.파라미터[1].key = resultType
+  전송메시지.주소.파라미터[1].val = json
+  전송메시지.주소.파라미터[2].key = numOfRows
+  전송메시지.주소.파라미터[2].val = 20
+  전송메시지.주소.파라미터[3].key = pageNo
+  전송메시지.주소.파라미터[3].val = 1
+  전송메시지.주소.파라미터[4].key = likeItmsNm
+  전송메시지.주소.파라미터[4].val = 세션.krx_target_name
+}
+전송::KRX.KRX시세조회전송
+{
+  전송메시지.메소드 = GET
+  전송메시지.주소.도메인 = 설정.KRX.domain
+  전송메시지.주소.경로 = /getStockPriceInfo_V2
+  전송메시지.주소.파라미터[0].key = serviceKey
+  전송메시지.주소.파라미터[0].val = 설정.KRX.service_key
+  전송메시지.주소.파라미터[1].key = resultType
+  전송메시지.주소.파라미터[1].val = json
+  전송메시지.주소.파라미터[2].key = numOfRows
+  전송메시지.주소.파라미터[2].val = 1
+  전송메시지.주소.파라미터[3].key = pageNo
+  전송메시지.주소.파라미터[3].val = 1
+  전송메시지.주소.파라미터[4].key = likeSrtnCd
+  전송메시지.주소.파라미터[4].val = 세션.krx_walk_code
+}
+전송::TELEGRAM.주식관심종목응답전송
+{
+  전송메시지.메소드 = GET
+  전송메시지.주소.도메인 = 설정.TELEGRAM.domain
+  전송메시지.주소.경로 = 문장.텔레그램응답경로
+  전송메시지.주소.파라미터[0].key = chat_id
+  전송메시지.주소.파라미터[0].val = 세션.pending_reply_chat_id
+  전송메시지.주소.파라미터[1].key = text
+  전송메시지.주소.파라미터[1].val = 세션.krx_reply_text
+}
+전송::TELEGRAM.주식감시알림텔레그램전송
+{
+  전송메시지.메소드 = GET
+  전송메시지.주소.도메인 = 설정.TELEGRAM.domain
+  전송메시지.주소.경로 = 문장.텔레그램응답경로
+  전송메시지.주소.파라미터[0].key = chat_id
+  전송메시지.주소.파라미터[0].val = 설정.TELEGRAM.my_chat_id
+  전송메시지.주소.파라미터[1].key = text
+  전송메시지.주소.파라미터[1].val = 문장.주식감시알림문장
+}
+타이머::KRX.주식감시타이머
+{
+  전송메시지.이벤트명 = 주식감시틱
+  전송메시지.시간 = 86400000
+}
+문장::KRX.KRX주식시세라인문장
+{$$$세션.krx_line_name$$$ $$$세션.krx_line_price$$$원 $$$세션.krx_line_rate$$$% (전일 기준)}
+문장::KRX.KRX주식감시알림라인문장
+{$$$세션.krx_line_name$$$ $$$세션.krx_line_rate$$$% $$$세션.krx_line_price$$$원 (전일 기준)}
+문장::TELEGRAM.주식감시알림문장
+{[주식 관심종목 알림] 전일 대비 등락률 $$$설정.KRX.threshold$$$% 이상 변동된 종목이 있습니다 (전일 기준).
+$$$세션.krx_watch_alert_text$$$}
+문장::TELEGRAM.주식관심종목추가완료문장
+{$$$세션.krx_target_name$$$($$$세션.krx_resolved_code$$$)를 관심종목에 추가했습니다. 매일 전일 기준 등락률을 확인해 $$$설정.KRX.threshold$$$% 이상 변동 시 알려드립니다.}
+문장::TELEGRAM.주식관심종목검색실패문장
+{"$$$세션.krx_target_name$$$" 종목을 찾을 수 없습니다. 정확한 종목명으로 다시 시도해주세요.}
+문장::TELEGRAM.주식관심종목삭제완료문장
+{$$$세션.krx_target_name$$$을(를) 관심종목에서 삭제했습니다.}
+문장::TELEGRAM.주식관심종목삭제실패문장
+{$$$세션.krx_target_name$$$은(는) 등록된 관심종목이 아닙니다.}
+문장::TELEGRAM.주식관심종목조회빈목록문장
+{등록된 관심종목이 없습니다. "주식 관심종목 추가 삼성전자"처럼 말씀해주세요.}
 

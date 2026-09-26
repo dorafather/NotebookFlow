@@ -18,7 +18,7 @@
 ; 컴파일하면 ..\bin\ 아래 최신 산출물이 없을 수 있다.
 
 #define MyAppName "NotebookFlow"
-#define MyAppVersion "1.3.0"
+#define MyAppVersion "1.4.0"
 #define MyAppPublisher "dorafather"
 #define MyTrayExeName "bin\tray\tray-flow.exe"
 #define MyNotebookFlowExeName "bin\notebookflow\NotebookFlow.exe"

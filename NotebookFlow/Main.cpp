@@ -130,6 +130,63 @@ static void s_fnEnsureAddrIniExists(const std::wstring & _exeDirWide)
 	}
 	printf("[NotebookFlow] addr.ini not found and no addr.ini.template available - engine will boot with empty config.\r\n");
 }
+// claude-code 2026-09-26: "GitHub Pull 방식 업데이트 확인" 티켓 - 하루 1회 GitHub
+// 조회를 "썬더링 허드" 없이 사용자마다 자연스럽게 분산시키기 위한 앵커값.
+// 최초 부팅 시(딱 한 번) 그 순간의 로컬 "시(0~23)"를 addr.ini [INFO] 섹션에
+// install_hour=NN(2자리, 함수.날짜(...,%%H)의 strftime 출력과 자릿수를 맞춤 -
+// rest.sce가 매시 함수.날짜(x,%%H)로 뽑은 현재 시각과 문자열 그대로 비교하므로
+// 자릿수가 다르면 절대 일치하지 않는다)로 기록한다. 이미 값이 있으면(재기동
+// 포함) 절대 덮어쓰지 않는다 - "최초 1회만" 요구사항의 핵심.
+static void s_fnEnsureInstallHourRecorded(const std::wstring & _exeDirWide)
+{
+	std::wstring addrIniPath = _exeDirWide + L"\\addr.ini";
+	std::ifstream ifs(addrIniPath, std::ios::binary);
+	if (!ifs)
+	{
+		printf("[NotebookFlow] install_hour: addr.ini를 아직 열 수 없어 건너뜁니다(다음 기동 시 재시도).\r\n");
+		return;
+	}
+	std::ostringstream ss;
+	ss << ifs.rdbuf();
+	std::string content = ss.str();
+	ifs.close();
+
+	if (content.find("install_hour=") != std::string::npos)
+	{
+		// 이미 기록되어 있음 - 재기동이어도 절대 덮어쓰지 않는다.
+		return;
+	}
+
+	SYSTEMTIME st;
+	GetLocalTime(&st);
+	char hourBuf[8];
+	sprintf_s(hourBuf, "%02u", (unsigned)st.wHour);
+	std::string newLine = std::string("install_hour=") + hourBuf + "\r\n";
+
+	std::string newContent;
+	size_t infoPos = content.find("[INFO]");
+	if (infoPos != std::string::npos)
+	{
+		size_t lineEnd = content.find('\n', infoPos);
+		if (lineEnd == std::string::npos) lineEnd = content.size() > 0 ? content.size() - 1 : 0;
+		newContent = content.substr(0, lineEnd + 1) + newLine + content.substr(lineEnd + 1);
+	}
+	else
+	{
+		// [INFO] 섹션 자체가 없는 극단적으로 오래된 addr.ini 대비 방어적 fallback.
+		newContent = std::string("[INFO]\r\n") + newLine + "\r\n" + content;
+	}
+
+	std::ofstream ofs(addrIniPath, std::ios::binary | std::ios::trunc);
+	if (!ofs)
+	{
+		printf("[NotebookFlow] install_hour: addr.ini 쓰기 실패(err=%lu) - 다음 기동 시 재시도됩니다.\r\n", GetLastError());
+		return;
+	}
+	ofs.write(newContent.data(), (std::streamsize)newContent.size());
+	ofs.close();
+	printf("[NotebookFlow] install_hour=%s 기록 완료(최초 1회, 이후 재기동에도 유지됩니다).\r\n", hourBuf);
+}
 static std::string s_fnFindFrontendDir()
 {
 	const std::string & exeDir = s_fnGetExeDirUtf8();
@@ -1023,6 +1080,7 @@ int main(int _argc, char ** _argv)
 		printf("[NotebookFlow] working directory pinned to exe folder: %s\r\n", s_fnGetExeDirUtf8().c_str());
 	}
 	s_fnEnsureAddrIniExists(exeDirWide);
+	s_fnEnsureInstallHourRecorded(exeDirWide);
 	App app;
 	httplib::Server svr;
 	SetupHttpServer(app, svr);

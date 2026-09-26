@@ -129,6 +129,16 @@ _NO_WORDS = {"아니오", "아니요", "아니", "노", "no", "n", "ㄴ", "ㄴ�
 # 태스크 안에서만 걸림).
 _lock = asyncio.Lock()
 
+# 이 _lock은 "동시 실행"만 막을 뿐 "중복 실행"은 막지 않는다 - 같은
+# session_key로 첫 요청이 아직 처리 중일 때 사용자가 응답이 없어 보여
+# 똑같은 지시를 한 번 더 보내면, 두 번째 요청은 이 락 뒤에서 얌전히
+# 대기했다가 첫 번째가 끝난 뒤 "또 한 번" 실행되어 같은 세션에 지시가
+# 두 번 반영된다(2026-09-25 실사용 중 발견 - turn_count가 의도치 않게
+# 2씩 올라감, 비용도 두 배). 이를 막기 위해 지금 claude -p가 실행 중인
+# session_key 집합을 따로 추적한다 - 이미 처리 중인 session_key로 또
+# 요청이 오면 claude -p를 새로 실행하지 않고 "처리 중" 안내만 보낸다.
+_busy_session_keys: set[str] = set()
+
 # job_id -> dict. 메모리에만 존재 - 재시작되면 진행 중 job은 사라진다. 완료
 # 후 30초 유예를 두고 제거(디버깅/조회용, /jobs/{id}).
 active_jobs: dict[str, dict[str, Any]] = {}
@@ -410,10 +420,17 @@ async def run_and_callback(
 ) -> None:
     """백그라운드 태스크(asyncio.create_task로 등록, HTTP 응답과 무관하게
     돈다). claude -p 실행 자체만 락으로 직렬화 - 동시에 여러 명령이 접수돼도
-    한 번에 하나씩 순서대로 실행된다(요청은 즉시 접수되어 대기열에 쌓임)."""
+    한 번에 하나씩 순서대로 실행된다(요청은 즉시 접수되어 대기열에 쌓임).
+    session_key는 claude -p가 실제로 끝날 때까지만 busy 처리한다(그 뒤의
+    report_done/turn_count 집계까지 묶으면 다음 요청이 불필요하게 더
+    오래 막힌다)."""
     job = active_jobs.get(job_id)
-    async with _lock:
-        r = await asyncio.to_thread(run_claude, instruction, session_key, agent_name)
+    try:
+        async with _lock:
+            r = await asyncio.to_thread(run_claude, instruction, session_key, agent_name)
+    finally:
+        if session_key:
+            _busy_session_keys.discard(session_key)
 
     if job is not None:
         job["finished_at"] = time.time()
@@ -502,6 +519,23 @@ async def handle_reset_confirm_reply(
     active_jobs.pop(job_id, None)
 
 
+async def _notify_busy(job_id: str, callback_chat_id: Optional[str]) -> None:
+    """이미 처리 중인 session_key로 또 요청이 들어왔을 때(응답이 늦어 보여
+    사용자가 같은 지시를 재전송하는 경우 등) - claude -p를 새로 실행하지
+    않고 즉시 안내만 보낸다. 비용 없음."""
+    job = active_jobs.get(job_id)
+    if job is not None:
+        job["finished_at"] = time.time()
+        job["ok"] = True
+        job["cost"] = 0.0
+        job["duration_ms"] = 0
+
+    await report_done(callback_chat_id, "이전 요청이 아직 처리 중입니다. 완료되면 알려드릴게요.", True)
+
+    await asyncio.sleep(30)
+    active_jobs.pop(job_id, None)
+
+
 async def do_reset_and_notify(job_id: str, session_key: str, callback_chat_id: Optional[str]) -> None:
     """"클루드초기화" 명령(요구사항 6) - 확인 절차 없이 즉시 session_key를
     리셋하고 완료 메시지만 보낸다. claude -p를 실행하지 않으므로 비용이
@@ -565,6 +599,28 @@ async def execute_agent(request: Request):
         )
         asyncio.create_task(handle_reset_confirm_reply(job_id, session_key, instruction, callback_chat_id))
         return JSONResponse(content={"RESULT": "0", "job_id": job_id})
+
+    # 같은 session_key로 claude -p가 지금 실행 중이면(응답이 늦어 보여
+    # 사용자가 같은 지시를 재전송한 경우 등) 또 실행시키지 않고 "처리 중"
+    # 안내만 보낸다 - _lock은 순서만 보장할 뿐 이 중복 실행 자체는 막지
+    # 않으므로(위 _busy_session_keys 정의 참고) 별도로 확인해야 한다.
+    if session_key and session_key in _busy_session_keys:
+        active_jobs[job_id] = {
+            "instruction": instruction,
+            "callback_chat_id": callback_chat_id,
+            "session_key": session_key,
+            "kind": "busy_reject",
+            "started_at": time.time(),
+        }
+        log.info(
+            "[%s] session_key=%s 이미 처리 중 - 중복 요청으로 보고 안내만 전송: %s",
+            job_id, session_key, instruction[:80],
+        )
+        asyncio.create_task(_notify_busy(job_id, callback_chat_id))
+        return JSONResponse(content={"RESULT": "0", "job_id": job_id})
+
+    if session_key:
+        _busy_session_keys.add(session_key)
 
     active_jobs[job_id] = {
         "instruction": instruction,
