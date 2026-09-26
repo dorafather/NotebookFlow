@@ -149,5 +149,19 @@ domain=https://apis.data.go.kr/1160100/GetStockSecuritiesInfoService_V2
 threshold=5
 telegram_alias=주식
 
+#공공데이터포털(data.go.kr)의 "기상청_단기예보 ((구)_동네예보) 조회서비스"
+#API에서 본인 명의로 발급받은 서비스키가 필요합니다(무료, 개인별 발급 -
+#KRX와 같은 포털이라 서비스키를 공유하는 경우가 많습니다). threshold는
+#강수확률 알림 기준(%), alert_hour는 매일 알림을 확인할 시(0~23),
+#default_region은 지역을 안 붙이고 "기상청 날씨"만 입력했을 때 쓸
+#기본 지역입니다.
+[KMA]
+service_key=<여기에 공공데이터포털에서 발급받은 본인의 서비스키를 입력하세요>
+domain=https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0
+threshold=60
+alert_hour=07
+default_region=서울
+telegram_alias=기상청
+
 [TRACE]
 name=TELEGRAM

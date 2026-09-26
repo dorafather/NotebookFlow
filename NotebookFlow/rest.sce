@@ -18,6 +18,8 @@
   UPDATE_DL.수신메시지.저장모드 == 1    처리.업데이트파일다운로드완료처리
   FLOW.수신메시지.이벤트명 == 주식감시틱    처리.주식관심종목감시처리
   KRX.수신메시지.응답코드 == 200    처리.KRX응답분기처리
+  FLOW.수신메시지.이벤트명 == 기상알림틱    처리.기상알림확인처리
+  KMA.수신메시지.응답코드 == 200    처리.KMA응답분기처리
   TELEGRAM.수신메시지.이벤트명 == 텔레그램타이머    처리.텔레그램핑전송
   TELEGRAM.수신메시지.이벤트명 == 텔레그램환영타이머    처리.텔레그램환영처리
   TELEGRAM.수신메시지.ok == 1    처리.텔레그램수신처리
@@ -45,6 +47,8 @@
     타이머.업데이트확인타이머
     처리.주식관심종목초기화
     타이머.주식감시타이머
+    처리.기상청관심지역초기화
+    타이머.기상알림타이머
 }
 처리::FLOW.클루드코드완료처리
 {
@@ -152,6 +156,7 @@
     함수.앞자리비교(cmd_고객문의,수신메시지.result[0].message.text,고객문의)
     함수.앞자리비교(cmd_업데이트,수신메시지.result[0].message.text,업데이트)
     함수.앞자리비교(cmd_주식,수신메시지.result[0].message.text,주식)
+    함수.앞자리비교(cmd_기상청,수신메시지.result[0].message.text,기상청)
     처리.텔레그램수신메시지분기
   그외
     함수.더하기(tg_offset,수신메시지.result[0].update_id,1)
@@ -257,6 +262,8 @@
     처리.텔레그램업데이트명령처리
   그외그외(세션.cmd_주식 == 1)
     처리.텔레그램주식명령처리
+  그외그외(세션.cmd_기상청 == 1)
+    처리.텔레그램기상청명령처리
   그외
     전송.델레그램응답전송
 }
@@ -1674,4 +1681,592 @@ $$$세션.krx_watch_alert_text$$$}
 {$$$세션.krx_target_name$$$은(는) 등록된 관심종목이 아닙니다.}
 문장::TELEGRAM.주식관심종목조회빈목록문장
 {등록된 관심종목이 없습니다. "주식 관심종목 추가 삼성전자"처럼 말씀해주세요.}
+처리::FLOW.기상청관심지역초기화
+{
+  만약에(참)
+    함수.저장(kma_watch_csv,없음)
+    함수.저장(kma_seed_found,0)
+    처리.기상청지역시드확인1
+}
+처리::FLOW.기상청지역시드확인1
+{
+  만약에(설정.KMA_WATCHLIST.지역1 != NULL) 그리고(세션.kma_seed_found != 1)
+    함수.저장(kma_watch_csv,설정.KMA_WATCHLIST.지역1)
+    함수.저장(kma_seed_found,1)
+    처리.기상청지역시드확인2
+  그외그외(설정.KMA_WATCHLIST.지역1 != NULL)
+    함수.붙이기(kma_watch_csv,|,설정.KMA_WATCHLIST.지역1)
+    처리.기상청지역시드확인2
+  그외
+    처리.기상청지역시드확인2
+}
+처리::FLOW.기상청지역시드확인2
+{
+  만약에(설정.KMA_WATCHLIST.지역2 != NULL) 그리고(세션.kma_seed_found != 1)
+    함수.저장(kma_watch_csv,설정.KMA_WATCHLIST.지역2)
+    함수.저장(kma_seed_found,1)
+    처리.기상청지역시드확인3
+  그외그외(설정.KMA_WATCHLIST.지역2 != NULL)
+    함수.붙이기(kma_watch_csv,|,설정.KMA_WATCHLIST.지역2)
+    처리.기상청지역시드확인3
+  그외
+    처리.기상청지역시드확인3
+}
+처리::FLOW.기상청지역시드확인3
+{
+  만약에(설정.KMA_WATCHLIST.지역3 != NULL) 그리고(세션.kma_seed_found != 1)
+    함수.저장(kma_watch_csv,설정.KMA_WATCHLIST.지역3)
+    함수.저장(kma_seed_found,1)
+    처리.기상청지역시드확인4
+  그외그외(설정.KMA_WATCHLIST.지역3 != NULL)
+    함수.붙이기(kma_watch_csv,|,설정.KMA_WATCHLIST.지역3)
+    처리.기상청지역시드확인4
+  그외
+    처리.기상청지역시드확인4
+}
+처리::FLOW.기상청지역시드확인4
+{
+  만약에(설정.KMA_WATCHLIST.지역4 != NULL) 그리고(세션.kma_seed_found != 1)
+    함수.저장(kma_watch_csv,설정.KMA_WATCHLIST.지역4)
+    함수.저장(kma_seed_found,1)
+    처리.기상청지역시드확인5
+  그외그외(설정.KMA_WATCHLIST.지역4 != NULL)
+    함수.붙이기(kma_watch_csv,|,설정.KMA_WATCHLIST.지역4)
+    처리.기상청지역시드확인5
+  그외
+    처리.기상청지역시드확인5
+}
+처리::FLOW.기상청지역시드확인5
+{
+  만약에(설정.KMA_WATCHLIST.지역5 != NULL) 그리고(세션.kma_seed_found != 1)
+    함수.저장(kma_watch_csv,설정.KMA_WATCHLIST.지역5)
+    함수.저장(kma_seed_found,1)
+    로그.출력(기상청 관심지역 시드 로딩 완료)
+  그외그외(설정.KMA_WATCHLIST.지역5 != NULL)
+    함수.붙이기(kma_watch_csv,|,설정.KMA_WATCHLIST.지역5)
+    로그.출력(기상청 관심지역 시드 로딩 완료)
+  그외
+    로그.출력(기상청 관심지역 시드 로딩 완료)
+}
+처리::FLOW.기상알림확인처리
+{
+  만약에(참)
+    함수.날짜(kma_alert_hour_now,%H)
+    타이머.기상알림타이머
+    처리.기상알림시각비교
+}
+처리::FLOW.기상알림시각비교
+{
+  만약에(세션.kma_alert_hour_now == 설정.KMA.alert_hour)
+    함수.저장(kma_mode,폴링)
+    처리.KMA관심지역순회시작
+  그외
+    로그.출력(기상 알림 스킵 - 시각 불일치)
+}
+처리::TELEGRAM.텔레그램기상청명령처리
+{
+  만약에(참)
+    함수.단어분리(kma_cmd_word_list,수신메시지.result[0].message.text)
+    함수.단어합치기(cmd_rest,세션.리스트.kma_cmd_word_list,1)
+    함수.앞자리비교(cmd_날씨,세션.cmd_rest,날씨)
+    함수.앞자리비교(cmd_지역,세션.cmd_rest,지역)
+    처리.텔레그램기상청명령분기
+}
+처리::TELEGRAM.텔레그램기상청명령분기
+{
+  만약에(세션.cmd_날씨 == 1)
+    함수.저장(pending_reply_chat_id,수신메시지.result[0].message.chat.id)
+    처리.텔레그램기상청날씨명령처리
+  그외그외(세션.cmd_지역 == 1)
+    함수.저장(pending_reply_chat_id,수신메시지.result[0].message.chat.id)
+    처리.텔레그램기상청지역명령처리
+  그외
+    전송.델레그램응답전송
+}
+처리::TELEGRAM.텔레그램기상청날씨명령처리
+{
+  만약에(참)
+    함수.단어분리(kma_weather_word_list,세션.cmd_rest)
+    함수.단어합치기(kma_target_name,세션.리스트.kma_weather_word_list,1)
+    함수.저장(kma_mode,조회단건)
+    처리.KMA지역명확정
+}
+처리::KMA.KMA지역명확정
+{
+  만약에(세션.kma_target_name != NULL)
+    처리.KMA지역좌표확인
+  그외
+    함수.저장(kma_target_name,설정.KMA.default_region)
+    처리.KMA지역좌표확인
+}
+처리::TELEGRAM.텔레그램기상청지역명령처리
+{
+  만약에(참)
+    함수.단어분리(kma_region_word_list,세션.cmd_rest)
+    함수.단어합치기(kma_region_rest,세션.리스트.kma_region_word_list,1)
+    함수.앞자리비교(cmd_지역추가,세션.kma_region_rest,추가)
+    함수.앞자리비교(cmd_지역삭제,세션.kma_region_rest,삭제)
+    함수.앞자리비교(cmd_지역조회,세션.kma_region_rest,조회)
+    처리.텔레그램기상청지역명령분기
+}
+처리::TELEGRAM.텔레그램기상청지역명령분기
+{
+  만약에(세션.cmd_지역추가 == 1)
+    처리.텔레그램기상청지역추가명령처리
+  그외그외(세션.cmd_지역삭제 == 1)
+    처리.텔레그램기상청지역삭제명령처리
+  그외그외(세션.cmd_지역조회 == 1)
+    처리.텔레그램기상청지역조회명령처리
+  그외
+    전송.델레그램응답전송
+}
+처리::TELEGRAM.텔레그램기상청지역조회명령처리
+{
+  만약에(참)
+    함수.저장(kma_mode,지역조회)
+    처리.KMA관심지역순회시작
+}
+처리::TELEGRAM.텔레그램기상청지역추가명령처리
+{
+  만약에(참)
+    함수.단어분리(kma_add_word_list,세션.kma_region_rest)
+    함수.단어합치기(kma_target_name,세션.리스트.kma_add_word_list,1)
+    처리.KMA지역명검증
+}
+처리::KMA.KMA지역명검증
+{
+  만약에(세션.kma_target_name == 서울)
+    함수.저장(kma_region_found,1)
+    처리.KMA지역추가확정
+  그외그외(세션.kma_target_name == 부산)
+    함수.저장(kma_region_found,1)
+    처리.KMA지역추가확정
+  그외그외(세션.kma_target_name == 대구)
+    함수.저장(kma_region_found,1)
+    처리.KMA지역추가확정
+  그외그외(세션.kma_target_name == 인천)
+    함수.저장(kma_region_found,1)
+    처리.KMA지역추가확정
+  그외그외(세션.kma_target_name == 광주)
+    함수.저장(kma_region_found,1)
+    처리.KMA지역추가확정
+  그외그외(세션.kma_target_name == 대전)
+    함수.저장(kma_region_found,1)
+    처리.KMA지역추가확정
+  그외그외(세션.kma_target_name == 울산)
+    함수.저장(kma_region_found,1)
+    처리.KMA지역추가확정
+  그외그외(세션.kma_target_name == 세종)
+    함수.저장(kma_region_found,1)
+    처리.KMA지역추가확정
+  그외그외(세션.kma_target_name == 수원)
+    함수.저장(kma_region_found,1)
+    처리.KMA지역추가확정
+  그외그외(세션.kma_target_name == 제주)
+    함수.저장(kma_region_found,1)
+    처리.KMA지역추가확정
+  그외
+    함수.저장(kma_region_found,0)
+    처리.KMA지역추가확정
+}
+처리::KMA.KMA지역추가확정
+{
+  만약에(세션.kma_region_found == 0)
+    함수.저장(kma_reply_text,문장.KMA지역미지원문장)
+    전송.기상청응답전송
+  그외그외(세션.kma_watch_csv == 없음)
+    함수.저장(kma_watch_csv,세션.kma_target_name)
+    함수.저장(kma_reply_text,문장.KMA지역추가완료문장)
+    전송.기상청응답전송
+  그외
+    함수.붙이기(kma_watch_csv,|,세션.kma_target_name)
+    함수.저장(kma_reply_text,문장.KMA지역추가완료문장)
+    전송.기상청응답전송
+}
+처리::TELEGRAM.텔레그램기상청지역삭제명령처리
+{
+  만약에(참)
+    함수.단어분리(kma_del_word_list,세션.kma_region_rest)
+    함수.단어합치기(kma_target_name,세션.리스트.kma_del_word_list,1)
+    함수.쪼개기(kma_watch_list,세션.kma_watch_csv,|)
+    함수.저장(kma_del_idx,0)
+    함수.저장(kma_del_found,0)
+    함수.저장(kma_new_csv,없음)
+    함수.저장(kma_new_found,0)
+    처리.KMA지역삭제순회
+}
+처리::KMA.KMA지역삭제순회
+{
+  만약에(세션.kma_del_idx >= 세션.리스트.kma_watch_list.SIZE)
+    처리.KMA지역삭제완료
+  그외
+    처리.KMA지역삭제항목검사
+}
+처리::KMA.KMA지역삭제항목검사
+{
+  만약에(세션.리스트.kma_watch_list[세션.kma_del_idx] == 세션.kma_target_name)
+    함수.더하기(kma_del_found,세션.kma_del_found,1)
+    함수.더하기(kma_del_idx,세션.kma_del_idx,1)
+    처리.KMA지역삭제순회
+  그외
+    처리.KMA지역삭제보존
+}
+처리::KMA.KMA지역삭제보존
+{
+  만약에(세션.kma_new_found == 0)
+    함수.저장(kma_new_csv,세션.리스트.kma_watch_list[세션.kma_del_idx])
+    함수.저장(kma_new_found,1)
+    함수.더하기(kma_del_idx,세션.kma_del_idx,1)
+    처리.KMA지역삭제순회
+  그외
+    함수.붙이기(kma_new_csv,|,세션.리스트.kma_watch_list[세션.kma_del_idx])
+    함수.더하기(kma_del_idx,세션.kma_del_idx,1)
+    처리.KMA지역삭제순회
+}
+처리::KMA.KMA지역삭제완료
+{
+  만약에(세션.kma_del_found > 0)
+    함수.저장(kma_watch_csv,세션.kma_new_csv)
+    함수.저장(kma_reply_text,문장.KMA지역삭제완료문장)
+    전송.기상청응답전송
+  그외
+    함수.저장(kma_reply_text,문장.KMA지역삭제실패문장)
+    전송.기상청응답전송
+}
+처리::KMA.KMA지역좌표확인
+{
+  만약에(세션.kma_target_name == 서울)
+    함수.저장(kma_nx,60)
+    함수.저장(kma_ny,127)
+    함수.저장(kma_region_found,1)
+    처리.KMA지역확인완료
+  그외그외(세션.kma_target_name == 부산)
+    함수.저장(kma_nx,98)
+    함수.저장(kma_ny,76)
+    함수.저장(kma_region_found,1)
+    처리.KMA지역확인완료
+  그외그외(세션.kma_target_name == 대구)
+    함수.저장(kma_nx,89)
+    함수.저장(kma_ny,90)
+    함수.저장(kma_region_found,1)
+    처리.KMA지역확인완료
+  그외그외(세션.kma_target_name == 인천)
+    함수.저장(kma_nx,55)
+    함수.저장(kma_ny,124)
+    함수.저장(kma_region_found,1)
+    처리.KMA지역확인완료
+  그외그외(세션.kma_target_name == 광주)
+    함수.저장(kma_nx,58)
+    함수.저장(kma_ny,74)
+    함수.저장(kma_region_found,1)
+    처리.KMA지역확인완료
+  그외그외(세션.kma_target_name == 대전)
+    함수.저장(kma_nx,67)
+    함수.저장(kma_ny,100)
+    함수.저장(kma_region_found,1)
+    처리.KMA지역확인완료
+  그외그외(세션.kma_target_name == 울산)
+    함수.저장(kma_nx,102)
+    함수.저장(kma_ny,84)
+    함수.저장(kma_region_found,1)
+    처리.KMA지역확인완료
+  그외그외(세션.kma_target_name == 세종)
+    함수.저장(kma_nx,66)
+    함수.저장(kma_ny,103)
+    함수.저장(kma_region_found,1)
+    처리.KMA지역확인완료
+  그외그외(세션.kma_target_name == 수원)
+    함수.저장(kma_nx,60)
+    함수.저장(kma_ny,121)
+    함수.저장(kma_region_found,1)
+    처리.KMA지역확인완료
+  그외그외(세션.kma_target_name == 제주)
+    함수.저장(kma_nx,52)
+    함수.저장(kma_ny,38)
+    함수.저장(kma_region_found,1)
+    처리.KMA지역확인완료
+  그외
+    함수.저장(kma_region_found,0)
+    처리.KMA지역확인완료
+}
+처리::KMA.KMA지역확인완료
+{
+  만약에(세션.kma_region_found == 0) 그리고(세션.kma_mode == 조회단건)
+    함수.저장(kma_reply_text,문장.KMA지역미지원문장)
+    전송.기상청응답전송
+  그외그외(세션.kma_region_found == 0)
+    함수.더하기(kma_walk_idx,세션.kma_walk_idx,1)
+    처리.KMA관심지역순회다음
+  그외
+    처리.KMA시각계산
+}
+처리::KMA.KMA시각계산
+{
+  만약에(참)
+    함수.날짜(kma_base_date,%Y%m%d)
+    함수.날짜(kma_hour,%H)
+    처리.KMA발표시각분기
+}
+처리::KMA.KMA발표시각분기
+{
+  만약에(세션.kma_hour >= 23)
+    함수.저장(kma_base_time,2300)
+    함수.저장(kma_base_hour,23)
+    전송.KMA단기예보조회전송
+  그외그외(세션.kma_hour >= 20)
+    함수.저장(kma_base_time,2000)
+    함수.저장(kma_base_hour,20)
+    전송.KMA단기예보조회전송
+  그외그외(세션.kma_hour >= 17)
+    함수.저장(kma_base_time,1700)
+    함수.저장(kma_base_hour,17)
+    전송.KMA단기예보조회전송
+  그외그외(세션.kma_hour >= 14)
+    함수.저장(kma_base_time,1400)
+    함수.저장(kma_base_hour,14)
+    전송.KMA단기예보조회전송
+  그외그외(세션.kma_hour >= 11)
+    함수.저장(kma_base_time,1100)
+    함수.저장(kma_base_hour,11)
+    전송.KMA단기예보조회전송
+  그외그외(세션.kma_hour >= 8)
+    함수.저장(kma_base_time,0800)
+    함수.저장(kma_base_hour,8)
+    전송.KMA단기예보조회전송
+  그외그외(세션.kma_hour >= 5)
+    함수.저장(kma_base_time,0500)
+    함수.저장(kma_base_hour,5)
+    전송.KMA단기예보조회전송
+  그외
+    함수.저장(kma_base_time,0200)
+    함수.저장(kma_base_hour,2)
+    전송.KMA단기예보조회전송
+}
+처리::KMA.KMA응답분기처리
+{
+  만약에(세션.kma_mode == 조회단건)
+    함수.객체저장(kma_items,수신메시지.response.body.items.item)
+    함수.저장(kma_item_idx,0)
+    함수.저장(kma_tmp,없음)
+    함수.저장(kma_pop,없음)
+    함수.저장(kma_sky_code,없음)
+    함수.저장(kma_pty_code,없음)
+    처리.KMA항목순회
+  그외그외(세션.kma_mode == 폴링)
+    함수.객체저장(kma_items,수신메시지.response.body.items.item)
+    함수.저장(kma_item_idx,0)
+    함수.저장(kma_tmp,없음)
+    함수.저장(kma_pop,없음)
+    함수.저장(kma_sky_code,없음)
+    함수.저장(kma_pty_code,없음)
+    처리.KMA항목순회
+  그외그외(세션.kma_mode == 지역조회)
+    함수.객체저장(kma_items,수신메시지.response.body.items.item)
+    함수.저장(kma_item_idx,0)
+    함수.저장(kma_tmp,없음)
+    함수.저장(kma_pop,없음)
+    함수.저장(kma_sky_code,없음)
+    함수.저장(kma_pty_code,없음)
+    처리.KMA항목순회
+  그외
+    로그.출력(KMA 알 수 없는 응답 모드)
+}
+처리::KMA.KMA항목순회
+{
+  만약에(세션.객체.kma_items[세션.kma_item_idx].category == NULL)
+    처리.KMA요약생성
+  그외
+    처리.KMA항목검사
+}
+처리::KMA.KMA항목검사
+{
+  만약에(세션.객체.kma_items[세션.kma_item_idx].category == TMP)
+    함수.저장(kma_tmp,세션.객체.kma_items[세션.kma_item_idx].fcstValue)
+    함수.더하기(kma_item_idx,세션.kma_item_idx,1)
+    처리.KMA항목순회
+  그외그외(세션.객체.kma_items[세션.kma_item_idx].category == POP)
+    함수.저장(kma_pop,세션.객체.kma_items[세션.kma_item_idx].fcstValue)
+    함수.더하기(kma_item_idx,세션.kma_item_idx,1)
+    처리.KMA항목순회
+  그외그외(세션.객체.kma_items[세션.kma_item_idx].category == SKY)
+    함수.저장(kma_sky_code,세션.객체.kma_items[세션.kma_item_idx].fcstValue)
+    함수.더하기(kma_item_idx,세션.kma_item_idx,1)
+    처리.KMA항목순회
+  그외그외(세션.객체.kma_items[세션.kma_item_idx].category == PTY)
+    함수.저장(kma_pty_code,세션.객체.kma_items[세션.kma_item_idx].fcstValue)
+    함수.더하기(kma_item_idx,세션.kma_item_idx,1)
+    처리.KMA항목순회
+  그외
+    함수.더하기(kma_item_idx,세션.kma_item_idx,1)
+    처리.KMA항목순회
+}
+처리::KMA.KMA요약생성
+{
+  만약에(세션.kma_pty_code == 1)
+    함수.저장(kma_weather_text,비)
+    처리.KMA임계값판정
+  그외그외(세션.kma_pty_code == 2)
+    함수.저장(kma_weather_text,비또는눈)
+    처리.KMA임계값판정
+  그외그외(세션.kma_pty_code == 3)
+    함수.저장(kma_weather_text,눈)
+    처리.KMA임계값판정
+  그외그외(세션.kma_pty_code == 4)
+    함수.저장(kma_weather_text,소나기)
+    처리.KMA임계값판정
+  그외그외(세션.kma_sky_code == 1)
+    함수.저장(kma_weather_text,맑음)
+    처리.KMA임계값판정
+  그외그외(세션.kma_sky_code == 3)
+    함수.저장(kma_weather_text,구름많음)
+    처리.KMA임계값판정
+  그외그외(세션.kma_sky_code == 4)
+    함수.저장(kma_weather_text,흐림)
+    처리.KMA임계값판정
+  그외
+    함수.저장(kma_weather_text,정보없음)
+    처리.KMA임계값판정
+}
+처리::KMA.KMA임계값판정
+{
+  만약에(세션.kma_mode == 조회단건)
+    처리.KMA단건응답조립
+  그외그외(세션.kma_mode == 지역조회)
+    처리.KMA지역조회라인추가
+  그외그외(세션.kma_pty_code != 0)
+    처리.KMA감시라인추가
+  그외그외(세션.kma_pop >= 설정.KMA.threshold)
+    처리.KMA감시라인추가
+  그외
+    함수.더하기(kma_walk_idx,세션.kma_walk_idx,1)
+    처리.KMA관심지역순회다음
+}
+처리::KMA.KMA단건응답조립
+{
+  만약에(참)
+    함수.저장(kma_reply_text,문장.KMA날씨요약문장)
+    전송.기상청응답전송
+}
+처리::KMA.KMA감시라인추가
+{
+  만약에(세션.kma_walk_found == 0)
+    함수.저장(kma_walk_lines,문장.KMA감시알림라인문장)
+    함수.저장(kma_walk_found,1)
+    함수.더하기(kma_walk_idx,세션.kma_walk_idx,1)
+    처리.KMA관심지역순회다음
+  그외
+    함수.붙이기(kma_walk_lines,|,문장.KMA감시알림라인문장)
+    함수.더하기(kma_walk_idx,세션.kma_walk_idx,1)
+    처리.KMA관심지역순회다음
+}
+처리::KMA.KMA지역조회라인추가
+{
+  만약에(세션.kma_walk_found == 0)
+    함수.저장(kma_walk_lines,문장.KMA날씨요약문장)
+    함수.저장(kma_walk_found,1)
+    함수.더하기(kma_walk_idx,세션.kma_walk_idx,1)
+    처리.KMA관심지역순회다음
+  그외
+    함수.붙이기(kma_walk_lines,|,문장.KMA날씨요약문장)
+    함수.더하기(kma_walk_idx,세션.kma_walk_idx,1)
+    처리.KMA관심지역순회다음
+}
+처리::KMA.KMA관심지역순회시작
+{
+  만약에(세션.kma_watch_csv == 없음)
+    함수.저장(kma_walk_lines,없음)
+    처리.KMA관심지역순회완료
+  그외
+    함수.쪼개기(kma_watch_list,세션.kma_watch_csv,|)
+    함수.저장(kma_walk_idx,0)
+    함수.저장(kma_walk_found,0)
+    함수.저장(kma_walk_lines,없음)
+    처리.KMA관심지역순회다음
+}
+처리::KMA.KMA관심지역순회다음
+{
+  만약에(세션.kma_walk_idx >= 세션.리스트.kma_watch_list.SIZE)
+    처리.KMA관심지역순회완료
+  그외
+    함수.저장(kma_target_name,세션.리스트.kma_watch_list[세션.kma_walk_idx])
+    처리.KMA지역좌표확인
+}
+처리::KMA.KMA관심지역순회완료
+{
+  만약에(세션.kma_mode == 지역조회) 그리고(세션.kma_walk_lines != 없음)
+    함수.저장(kma_reply_text,세션.kma_walk_lines)
+    전송.기상청응답전송
+  그외그외(세션.kma_mode == 지역조회)
+    함수.저장(kma_reply_text,문장.KMA지역조회빈목록문장)
+    전송.기상청응답전송
+  그외그외(세션.kma_walk_lines != 없음)
+    함수.저장(kma_watch_alert_text,세션.kma_walk_lines)
+    전송.기상알림텔레그램전송
+  그외
+    로그.출력(기상청 관심지역 감시 - 임계값 초과 지역 없음, 알림 생략)
+}
+전송::KMA.KMA단기예보조회전송
+{
+  전송메시지.메소드 = GET
+  전송메시지.주소.도메인 = 설정.KMA.domain
+  전송메시지.주소.경로 = /getVilageFcst
+  전송메시지.주소.파라미터[0].key = serviceKey
+  전송메시지.주소.파라미터[0].val = 설정.KMA.service_key
+  전송메시지.주소.파라미터[1].key = pageNo
+  전송메시지.주소.파라미터[1].val = 1
+  전송메시지.주소.파라미터[2].key = numOfRows
+  전송메시지.주소.파라미터[2].val = 12
+  전송메시지.주소.파라미터[3].key = dataType
+  전송메시지.주소.파라미터[3].val = JSON
+  전송메시지.주소.파라미터[4].key = base_date
+  전송메시지.주소.파라미터[4].val = 세션.kma_base_date
+  전송메시지.주소.파라미터[5].key = base_time
+  전송메시지.주소.파라미터[5].val = 세션.kma_base_time
+  전송메시지.주소.파라미터[6].key = nx
+  전송메시지.주소.파라미터[6].val = 세션.kma_nx
+  전송메시지.주소.파라미터[7].key = ny
+  전송메시지.주소.파라미터[7].val = 세션.kma_ny
+}
+전송::TELEGRAM.기상청응답전송
+{
+  전송메시지.메소드 = GET
+  전송메시지.주소.도메인 = 설정.TELEGRAM.domain
+  전송메시지.주소.경로 = 문장.텔레그램응답경로
+  전송메시지.주소.파라미터[0].key = chat_id
+  전송메시지.주소.파라미터[0].val = 세션.pending_reply_chat_id
+  전송메시지.주소.파라미터[1].key = text
+  전송메시지.주소.파라미터[1].val = 세션.kma_reply_text
+}
+전송::TELEGRAM.기상알림텔레그램전송
+{
+  전송메시지.메소드 = GET
+  전송메시지.주소.도메인 = 설정.TELEGRAM.domain
+  전송메시지.주소.경로 = 문장.텔레그램응답경로
+  전송메시지.주소.파라미터[0].key = chat_id
+  전송메시지.주소.파라미터[0].val = 설정.TELEGRAM.my_chat_id
+  전송메시지.주소.파라미터[1].key = text
+  전송메시지.주소.파라미터[1].val = 문장.기상알림문장
+}
+타이머::KMA.기상알림타이머
+{
+  전송메시지.이벤트명 = 기상알림틱
+  전송메시지.시간 = 3600000
+}
+문장::KMA.KMA날씨요약문장
+{$$$세션.kma_target_name$$$ 날씨: $$$세션.kma_weather_text$$$, 기온 $$$세션.kma_tmp$$$도, 강수확률 $$$세션.kma_pop$$$% (오늘 $$$세션.kma_base_hour$$$시 발표 기준)}
+문장::KMA.KMA감시알림라인문장
+{$$$세션.kma_target_name$$$ $$$세션.kma_weather_text$$$ 강수확률 $$$세션.kma_pop$$$%}
+문장::TELEGRAM.기상알림문장
+{[기상청 날씨 알림] 강수확률 $$$설정.KMA.threshold$$$% 이상 또는 비/눈 예보가 있는 관심지역이 있습니다.
+$$$세션.kma_watch_alert_text$$$}
+문장::TELEGRAM.KMA지역미지원문장
+{"$$$세션.kma_target_name$$$"은(는) 아직 지원하지 않는 지역입니다. 지원 지역: 서울, 부산, 대구, 인천, 광주, 대전, 울산, 세종, 수원, 제주}
+문장::TELEGRAM.KMA지역추가완료문장
+{$$$세션.kma_target_name$$$을(를) 관심지역에 추가했습니다. 매일 $$$설정.KMA.alert_hour$$$시경 강수확률 $$$설정.KMA.threshold$$$% 이상 또는 비/눈 예보 시 알려드립니다.}
+문장::TELEGRAM.KMA지역삭제완료문장
+{$$$세션.kma_target_name$$$을(를) 관심지역에서 삭제했습니다.}
+문장::TELEGRAM.KMA지역삭제실패문장
+{$$$세션.kma_target_name$$$은(는) 등록된 관심지역이 아닙니다.}
+문장::TELEGRAM.KMA지역조회빈목록문장
+{등록된 관심지역이 없습니다. "기상청 지역 추가 서울"처럼 말씀해주세요.}
 
