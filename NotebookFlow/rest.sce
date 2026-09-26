@@ -1291,7 +1291,7 @@ dorafather와 샛별이가 여러분의 이슈에 적극적으로 소통할 것�
     함수.저장(krx_seed_found,1)
     처리.주식시드확인2
   그외그외(설정.KRX_WATCHLIST.종목1 != NULL)
-    함수.붙이기(krx_watch_csv,",",설정.KRX_WATCHLIST.종목1)
+    함수.붙이기(krx_watch_csv,|,설정.KRX_WATCHLIST.종목1)
     처리.주식시드확인2
   그외
     처리.주식시드확인2
@@ -1303,7 +1303,7 @@ dorafather와 샛별이가 여러분의 이슈에 적극적으로 소통할 것�
     함수.저장(krx_seed_found,1)
     처리.주식시드확인3
   그외그외(설정.KRX_WATCHLIST.종목2 != NULL)
-    함수.붙이기(krx_watch_csv,",",설정.KRX_WATCHLIST.종목2)
+    함수.붙이기(krx_watch_csv,|,설정.KRX_WATCHLIST.종목2)
     처리.주식시드확인3
   그외
     처리.주식시드확인3
@@ -1315,7 +1315,7 @@ dorafather와 샛별이가 여러분의 이슈에 적극적으로 소통할 것�
     함수.저장(krx_seed_found,1)
     처리.주식시드확인4
   그외그외(설정.KRX_WATCHLIST.종목3 != NULL)
-    함수.붙이기(krx_watch_csv,",",설정.KRX_WATCHLIST.종목3)
+    함수.붙이기(krx_watch_csv,|,설정.KRX_WATCHLIST.종목3)
     처리.주식시드확인4
   그외
     처리.주식시드확인4
@@ -1327,7 +1327,7 @@ dorafather와 샛별이가 여러분의 이슈에 적극적으로 소통할 것�
     함수.저장(krx_seed_found,1)
     처리.주식시드확인5
   그외그외(설정.KRX_WATCHLIST.종목4 != NULL)
-    함수.붙이기(krx_watch_csv,",",설정.KRX_WATCHLIST.종목4)
+    함수.붙이기(krx_watch_csv,|,설정.KRX_WATCHLIST.종목4)
     처리.주식시드확인5
   그외
     처리.주식시드확인5
@@ -1339,7 +1339,7 @@ dorafather와 샛별이가 여러분의 이슈에 적극적으로 소통할 것�
     함수.저장(krx_seed_found,1)
     로그.출력(주식 관심종목 시드 로딩 완료)
   그외그외(설정.KRX_WATCHLIST.종목5 != NULL)
-    함수.붙이기(krx_watch_csv,",",설정.KRX_WATCHLIST.종목5)
+    함수.붙이기(krx_watch_csv,|,설정.KRX_WATCHLIST.종목5)
     로그.출력(주식 관심종목 시드 로딩 완료)
   그외
     로그.출력(주식 관심종목 시드 로딩 완료)
@@ -1405,7 +1405,7 @@ dorafather와 샛별이가 여러분의 이슈에 적극적으로 소통할 것�
     함수.단어합치기(krx_target_name,세션.리스트.cmd_word_list4,1)
     함수.저장(krx_del_match_prefix,세션.krx_target_name)
     함수.붙이기(krx_del_match_prefix,:)
-    함수.쪼개기(krx_watch_list,세션.krx_watch_csv,",")
+    함수.쪼개기(krx_watch_list,세션.krx_watch_csv,|)
     함수.저장(krx_del_idx,0)
     함수.저장(krx_del_found,0)
     함수.저장(krx_new_csv,없음)
@@ -1436,7 +1436,7 @@ dorafather와 샛별이가 여러분의 이슈에 적극적으로 소통할 것�
     함수.더하기(krx_del_idx,세션.krx_del_idx,1)
     처리.주식관심종목삭제순회
   그외
-    함수.붙이기(krx_new_csv,",",세션.리스트.krx_watch_list[세션.krx_del_idx])
+    함수.붙이기(krx_new_csv,|,세션.리스트.krx_watch_list[세션.krx_del_idx])
     함수.더하기(krx_del_idx,세션.krx_del_idx,1)
     처리.주식관심종목삭제순회
 }
@@ -1462,7 +1462,7 @@ dorafather와 샛별이가 여러분의 이슈에 적극적으로 소통할 것�
     함수.저장(krx_walk_lines,없음)
     처리.주식관심종목순회완료
   그외
-    함수.쪼개기(krx_watch_list,세션.krx_watch_csv,",")
+    함수.쪼개기(krx_watch_list,세션.krx_watch_csv,|)
     함수.저장(krx_walk_idx,0)
     함수.저장(krx_walk_found,0)
     함수.저장(krx_walk_lines,없음)
@@ -1526,7 +1526,7 @@ dorafather와 샛별이가 여러분의 이슈에 적극적으로 소통할 것�
     함수.저장(krx_reply_text,문장.주식관심종목추가완료문장)
     전송.주식관심종목응답전송
   그외
-    함수.붙이기(krx_watch_csv,",",세션.krx_target_name,:,세션.krx_resolved_code)
+    함수.붙이기(krx_watch_csv,|,세션.krx_target_name,:,세션.krx_resolved_code)
     함수.저장(krx_reply_text,문장.주식관심종목추가완료문장)
     전송.주식관심종목응답전송
 }
