@@ -44,6 +44,7 @@ class ExeCore
 		ActionParser * FINDACTION(POOL::POOLDATA & _rPool,KCSTR _name);
 		StmtParser * FINDSTMT(POOL::POOLDATA & _rPool,KCSTR _name);
 		KCSTR GETINI(KCSTR _category, KCSTR _key, KSTRING & _ret);
+		void SETINI(KCSTR _category, KCSTR _key, KCSTR _val);
 		bool EXEPROC(KCSTR _name, QTHREAD & _wk,
 						POOL::POOLDATA & _rPool, RestMsg & _rcvMsg);
 		bool isMatchDomain(KCSTR _namespace, RestMsg & _req);

@@ -163,5 +163,18 @@ alert_hour=07
 default_region=서울
 telegram_alias=기상청
 
+#공공데이터포털(data.go.kr)의 "한국환경공단_에어코리아_대기오염정보" API에서
+#본인 명의로 발급받은 서비스키가 필요합니다(무료, 개인별 발급 - KRX/KMA와
+#같은 포털이라 서비스키를 공유하는 경우가 많습니다). alert_hour는 매일
+#알림을 확인할 시(0~23), default_region은 지역을 안 붙이고 "미세먼지"만
+#입력했을 때 쓸 기본 지역입니다. 통합대기환경지수(khaiGrade) 3(나쁨) 이상일
+#때 알림이 발송됩니다(고정 기준, threshold 설정 없음).
+[KECO]
+service_key=<여기에 공공데이터포털에서 발급받은 본인의 서비스키를 입력하세요>
+domain=https://apis.data.go.kr/B552584/ArpltnInforInqireSvc
+alert_hour=07
+default_region=서울
+telegram_alias=미세먼지
+
 [TRACE]
 name=TELEGRAM

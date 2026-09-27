@@ -328,26 +328,58 @@ static void s_fnEnsureGdiplusStarted()
 static bool s_fnGenerateHelpImage(const std::string & _outPathUtf8)
 {
 	#if 1
+	// claude-code 2026-09-27: 긴 desc가 고정 rowH(42px)/col2W(460px) 밖으로
+	// 삐져나가 잘려 보이던 문제 수정 - PointF 기반 DrawString은 줄바꿈/클리핑
+	// 개념이 없어 컬럼 너비를 넘는 텍스트가 그대로 비트맵 경계 밖으로 나가
+	// 잘렸다. RectF+StringFormat(기본 단어 단위 줄바꿈)으로 먼저 각 행의
+	// 필요 높이를 MeasureString으로 측정한 뒤, 그 높이만큼 실제로 그린다.
 	HelpFileReader & help = HelpFileReader::OBJ();
 	help.m_lock.RLOCK();
 	RestParam & rows = help.m_msg.GET("rows");
 	const int nRows = rows.NUMS();
 	const int headerH = 56;
-	const int rowH = 42;
+	const int rowMinH = 42;
+	const int rowPadY = 16; // 줄바꿈된 텍스트 위아래 여백
 	const int padX = 20;
 	const int col1W = 300;
 	const int col2W = 460;
 	const int width = padX * 3 + col1W + col2W;
-	const int height = headerH + rowH * nRows + padX;
 	s_fnEnsureGdiplusStarted();
-	Gdiplus::Bitmap bmp(width, height, PixelFormat24bppRGB);
-	Gdiplus::Graphics g(&bmp);
-	g.SetTextRenderingHint(Gdiplus::TextRenderingHintAntiAlias);
-	g.Clear(Gdiplus::Color(255, 255, 255, 255));
 	Gdiplus::FontFamily fam(L"맑은 고딕");
 	Gdiplus::Font fontTitle(&fam, 20, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
 	Gdiplus::Font fontCmd(&fam, 15, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
 	Gdiplus::Font fontDesc(&fam, 15, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
+	Gdiplus::StringFormat wrapFmt;
+	wrapFmt.SetTrimming(Gdiplus::StringTrimmingWord);
+
+	std::vector<std::wstring> cmds(nRows), descs(nRows);
+	std::vector<int> rowHeights(nRows, rowMinH);
+	{
+		Gdiplus::Bitmap measureBmp(1, 1, PixelFormat24bppRGB);
+		Gdiplus::Graphics measureG(&measureBmp);
+		for (int i = 0; i < nRows; i++)
+		{
+			RestParam & item = rows[i];
+			cmds[i] = s_fnUtf8ToWide((KCSTR)item.GET("cmd").VAL());
+			descs[i] = s_fnUtf8ToWide((KCSTR)item.GET("desc").VAL());
+			Gdiplus::RectF cmdBound, descBound;
+			Gdiplus::RectF layoutCmd(0.0f, 0.0f, (float)col1W, 10000.0f);
+			measureG.MeasureString(cmds[i].c_str(), -1, &fontCmd, layoutCmd, &wrapFmt, &cmdBound);
+			Gdiplus::RectF layoutDesc(0.0f, 0.0f, (float)col2W, 10000.0f);
+			measureG.MeasureString(descs[i].c_str(), -1, &fontDesc, layoutDesc, &wrapFmt, &descBound);
+			float neededH = (cmdBound.Height > descBound.Height) ? cmdBound.Height : descBound.Height;
+			int rowH = (int)std::ceil(neededH) + rowPadY;
+			if (rowH < rowMinH) rowH = rowMinH;
+			rowHeights[i] = rowH;
+		}
+	}
+	int totalRowsH = 0;
+	for (int i = 0; i < nRows; i++) totalRowsH += rowHeights[i];
+	const int height = headerH + totalRowsH + padX;
+	Gdiplus::Bitmap bmp(width, height, PixelFormat24bppRGB);
+	Gdiplus::Graphics g(&bmp);
+	g.SetTextRenderingHint(Gdiplus::TextRenderingHintAntiAlias);
+	g.Clear(Gdiplus::Color(255, 255, 255, 255));
 	Gdiplus::SolidBrush brushBody(Gdiplus::Color(255, 40, 42, 54));
 	Gdiplus::SolidBrush brushHeaderBg(Gdiplus::Color(255, 47, 58, 82));
 	Gdiplus::SolidBrush brushHeaderText(Gdiplus::Color(255, 255, 255, 255));
@@ -360,16 +392,12 @@ static bool s_fnGenerateHelpImage(const std::string & _outPathUtf8)
 	int y = headerH;
 	for (int i = 0; i < nRows; i++)
 	{
+		int rowH = rowHeights[i];
 		if (i % 2 == 1) g.FillRectangle(&brushAltRow, 0, y, width, rowH);
-		RestParam & item = rows[i];
-		std::string szCmd = (KCSTR)item.GET("cmd").VAL();
-		std::string szDesc = (KCSTR)item.GET("desc").VAL();;
-		std::wstring cmd = s_fnUtf8ToWide(szCmd);
-		std::wstring desc = s_fnUtf8ToWide(szDesc);
-		g.DrawString(cmd.c_str(), -1, &fontCmd,
-			Gdiplus::PointF((float)padX, (float)(y + rowH / 2 - 11)), &brushBody);
-		g.DrawString(desc.c_str(), -1, &fontDesc,
-			Gdiplus::PointF((float)(padX * 2 + col1W), (float)(y + rowH / 2 - 11)), &brushBody);
+		Gdiplus::RectF layoutCmd((float)padX, (float)(y + rowPadY / 2), (float)col1W, (float)rowH);
+		g.DrawString(cmds[i].c_str(), -1, &fontCmd, layoutCmd, &wrapFmt, &brushBody);
+		Gdiplus::RectF layoutDesc((float)(padX * 2 + col1W), (float)(y + rowPadY / 2), (float)col2W, (float)rowH);
+		g.DrawString(descs[i].c_str(), -1, &fontDesc, layoutDesc, &wrapFmt, &brushBody);
 		g.DrawLine(&pen, 0.0f, (float)(y + rowH), (float)width, (float)(y + rowH));
 		y += rowH;
 	}

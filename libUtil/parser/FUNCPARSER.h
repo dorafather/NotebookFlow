@@ -30,6 +30,7 @@ namespace nsUtil
 #define DEF_DSL_FUNC_SPLIT_kor "쪼개기"
 #define DEF_DSL_FUNC_WORD_EX_kor "단어분리"
 #define DEF_DSL_FUNC_WORD_SUM_kor "단어합치기"
+#define DEF_DSL_FUNC_SET_INI_kor "설정저장"
 
 #define DEF_DSL_FUNC_SET_eng "SET"
 #define DEF_DSL_FUNC_SUM_eng "SUM"
@@ -53,6 +54,7 @@ namespace nsUtil
 #define DEF_DSL_FUNC_SPLIT_eng "SPLIT"
 #define DEF_DSL_FUNC_WORD_EX_eng "WORDEX"
 #define DEF_DSL_FUNC_WORD_SUM_eng "WORDSUM"
+#define DEF_DSL_FUNC_SET_INI_eng "SETINI"
 
 #define DEF_DSL_K_LOOP_BREAK_eng "LOOP_BREAK"
 #define DEF_DSL_PARSE_SIZE_eng ".SIZE"
@@ -80,6 +82,7 @@ inline bool IS_DSL_FUNC_ADDR(KCSTR _cmp){COMPSTR cmp;cmp=_cmp;if(cmp==DEF_DSL_FU
 inline bool IS_DSL_FUNC_SPLIT(KCSTR _cmp){COMPSTR cmp;cmp=_cmp;if(cmp==DEF_DSL_FUNC_SPLIT_eng||cmp==DEF_DSL_FUNC_SPLIT_kor)return true;else return false;}
 inline bool IS_DSL_FUNC_WORDEX(KCSTR _cmp){COMPSTR cmp;cmp=_cmp;if(cmp==DEF_DSL_FUNC_WORD_EX_eng||cmp==DEF_DSL_FUNC_WORD_EX_kor)return true;else return false;}
 inline bool IS_DSL_FUNC_WORDSUM(KCSTR _cmp){COMPSTR cmp;cmp=_cmp;if(cmp==DEF_DSL_FUNC_WORD_SUM_eng||cmp==DEF_DSL_FUNC_WORD_SUM_kor)return true;else return false;}
+inline bool IS_DSL_FUNC_SETINI(KCSTR _cmp){COMPSTR cmp;cmp=_cmp;if(cmp==DEF_DSL_FUNC_SET_INI_eng||cmp==DEF_DSL_FUNC_SET_INI_kor)return true;else return false;}
 
 inline KCSTR STR_DSL_FUNC_SET(KCSTR _lang){COMPSTR cmp(_lang);if(cmp=="eng")return DEF_DSL_FUNC_SET_eng;else return DEF_DSL_FUNC_SET_kor;}
 inline KCSTR STR_DSL_FUNC_SUM(KCSTR _lang){COMPSTR cmp(_lang);if(cmp=="eng")return DEF_DSL_FUNC_SUM_eng;else return DEF_DSL_FUNC_SUM_kor;}
@@ -103,6 +106,7 @@ inline KCSTR STR_DSL_FUNC_ADDR(KCSTR _lang){COMPSTR cmp(_lang);if(cmp=="eng")ret
 inline KCSTR STR_DSL_FUNC_SPLIT(KCSTR _lang){COMPSTR cmp(_lang);if(cmp=="eng")return DEF_DSL_FUNC_SPLIT_eng;else return DEF_DSL_FUNC_SPLIT_kor;}
 inline KCSTR STR_DSL_FUNC_WORD_EX(KCSTR _lang){COMPSTR cmp(_lang);if(cmp=="eng")return DEF_DSL_FUNC_WORD_EX_eng;else return DEF_DSL_FUNC_WORD_EX_kor;}
 inline KCSTR STR_DSL_FUNC_WORD_SUM(KCSTR _lang){COMPSTR cmp(_lang);if(cmp=="eng")return DEF_DSL_FUNC_WORD_SUM_eng;else return DEF_DSL_FUNC_WORD_SUM_kor;}
+inline KCSTR STR_DSL_FUNC_SET_INI(KCSTR _lang){COMPSTR cmp(_lang);if(cmp=="eng")return DEF_DSL_FUNC_SET_INI_eng;else return DEF_DSL_FUNC_SET_INI_kor;}
 
 typedef enum 
 {
@@ -128,6 +132,7 @@ typedef enum
     EXE_TYPE_SPLIT,
     EXE_TYPE_WORDEX,
     EXE_TYPE_WORDSUM,
+    EXE_TYPE_SET_INI,
     EXE_TYPE_MAX
 }eExeType;
 class FuncParser

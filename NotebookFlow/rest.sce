@@ -20,6 +20,8 @@
   KRX.수신메시지.응답코드 == 200    처리.KRX응답분기처리
   FLOW.수신메시지.이벤트명 == 기상알림틱    처리.기상알림확인처리
   KMA.수신메시지.응답코드 == 200    처리.KMA응답분기처리
+  FLOW.수신메시지.이벤트명 == 미세먼지알림틱    처리.미세먼지알림확인처리
+  KECO.수신메시지.응답코드 == 200    처리.KECO응답분기처리
   TELEGRAM.수신메시지.이벤트명 == 텔레그램타이머    처리.텔레그램핑전송
   TELEGRAM.수신메시지.이벤트명 == 텔레그램환영타이머    처리.텔레그램환영처리
   TELEGRAM.수신메시지.ok == 1    처리.텔레그램수신처리
@@ -49,6 +51,8 @@
     타이머.주식감시타이머
     처리.기상청관심지역초기화
     타이머.기상알림타이머
+    처리.미세먼지관심지역초기화
+    타이머.미세먼지알림타이머
 }
 처리::FLOW.클루드코드완료처리
 {
@@ -157,6 +161,7 @@
     함수.앞자리비교(cmd_업데이트,수신메시지.result[0].message.text,업데이트)
     함수.앞자리비교(cmd_주식,수신메시지.result[0].message.text,주식)
     함수.앞자리비교(cmd_기상청,수신메시지.result[0].message.text,기상청)
+    함수.앞자리비교(cmd_미세먼지,수신메시지.result[0].message.text,미세먼지)
     처리.텔레그램수신메시지분기
   그외
     함수.더하기(tg_offset,수신메시지.result[0].update_id,1)
@@ -264,6 +269,8 @@
     처리.텔레그램주식명령처리
   그외그외(세션.cmd_기상청 == 1)
     처리.텔레그램기상청명령처리
+  그외그외(세션.cmd_미세먼지 == 1)
+    처리.텔레그램미세먼지명령처리
   그외
     전송.델레그램응답전송
 }
@@ -1289,15 +1296,19 @@ dorafather와 샛별이가 여러분의 이슈에 적극적으로 소통할 것�
   만약에(참)
     함수.저장(krx_watch_csv,없음)
     함수.저장(krx_seed_found,0)
+    함수.저장(krx_ini_category,KRX_WATCHLIST)
+    함수.저장(krx_ini_clear_value,없음)
+    함수.저장(krx_ini_pipe,|)
+    함수.저장(krx_ini_colon,:)
     처리.주식시드확인1
 }
 처리::FLOW.주식시드확인1
 {
-  만약에(설정.KRX_WATCHLIST.종목1 != NULL) 그리고(세션.krx_seed_found != 1)
+  만약에(설정.KRX_WATCHLIST.종목1 != NULL) 그리고(설정.KRX_WATCHLIST.종목1 != 없음) 그리고(세션.krx_seed_found != 1)
     함수.저장(krx_watch_csv,설정.KRX_WATCHLIST.종목1)
     함수.저장(krx_seed_found,1)
     처리.주식시드확인2
-  그외그외(설정.KRX_WATCHLIST.종목1 != NULL)
+  그외그외(설정.KRX_WATCHLIST.종목1 != NULL) 그리고(설정.KRX_WATCHLIST.종목1 != 없음)
     함수.붙이기(krx_watch_csv,|,설정.KRX_WATCHLIST.종목1)
     처리.주식시드확인2
   그외
@@ -1305,11 +1316,11 @@ dorafather와 샛별이가 여러분의 이슈에 적극적으로 소통할 것�
 }
 처리::FLOW.주식시드확인2
 {
-  만약에(설정.KRX_WATCHLIST.종목2 != NULL) 그리고(세션.krx_seed_found != 1)
+  만약에(설정.KRX_WATCHLIST.종목2 != NULL) 그리고(설정.KRX_WATCHLIST.종목2 != 없음) 그리고(세션.krx_seed_found != 1)
     함수.저장(krx_watch_csv,설정.KRX_WATCHLIST.종목2)
     함수.저장(krx_seed_found,1)
     처리.주식시드확인3
-  그외그외(설정.KRX_WATCHLIST.종목2 != NULL)
+  그외그외(설정.KRX_WATCHLIST.종목2 != NULL) 그리고(설정.KRX_WATCHLIST.종목2 != 없음)
     함수.붙이기(krx_watch_csv,|,설정.KRX_WATCHLIST.종목2)
     처리.주식시드확인3
   그외
@@ -1317,11 +1328,11 @@ dorafather와 샛별이가 여러분의 이슈에 적극적으로 소통할 것�
 }
 처리::FLOW.주식시드확인3
 {
-  만약에(설정.KRX_WATCHLIST.종목3 != NULL) 그리고(세션.krx_seed_found != 1)
+  만약에(설정.KRX_WATCHLIST.종목3 != NULL) 그리고(설정.KRX_WATCHLIST.종목3 != 없음) 그리고(세션.krx_seed_found != 1)
     함수.저장(krx_watch_csv,설정.KRX_WATCHLIST.종목3)
     함수.저장(krx_seed_found,1)
     처리.주식시드확인4
-  그외그외(설정.KRX_WATCHLIST.종목3 != NULL)
+  그외그외(설정.KRX_WATCHLIST.종목3 != NULL) 그리고(설정.KRX_WATCHLIST.종목3 != 없음)
     함수.붙이기(krx_watch_csv,|,설정.KRX_WATCHLIST.종목3)
     처리.주식시드확인4
   그외
@@ -1329,11 +1340,11 @@ dorafather와 샛별이가 여러분의 이슈에 적극적으로 소통할 것�
 }
 처리::FLOW.주식시드확인4
 {
-  만약에(설정.KRX_WATCHLIST.종목4 != NULL) 그리고(세션.krx_seed_found != 1)
+  만약에(설정.KRX_WATCHLIST.종목4 != NULL) 그리고(설정.KRX_WATCHLIST.종목4 != 없음) 그리고(세션.krx_seed_found != 1)
     함수.저장(krx_watch_csv,설정.KRX_WATCHLIST.종목4)
     함수.저장(krx_seed_found,1)
     처리.주식시드확인5
-  그외그외(설정.KRX_WATCHLIST.종목4 != NULL)
+  그외그외(설정.KRX_WATCHLIST.종목4 != NULL) 그리고(설정.KRX_WATCHLIST.종목4 != 없음)
     함수.붙이기(krx_watch_csv,|,설정.KRX_WATCHLIST.종목4)
     처리.주식시드확인5
   그외
@@ -1341,11 +1352,11 @@ dorafather와 샛별이가 여러분의 이슈에 적극적으로 소통할 것�
 }
 처리::FLOW.주식시드확인5
 {
-  만약에(설정.KRX_WATCHLIST.종목5 != NULL) 그리고(세션.krx_seed_found != 1)
+  만약에(설정.KRX_WATCHLIST.종목5 != NULL) 그리고(설정.KRX_WATCHLIST.종목5 != 없음) 그리고(세션.krx_seed_found != 1)
     함수.저장(krx_watch_csv,설정.KRX_WATCHLIST.종목5)
     함수.저장(krx_seed_found,1)
     로그.출력(주식 관심종목 시드 로딩 완료)
-  그외그외(설정.KRX_WATCHLIST.종목5 != NULL)
+  그외그외(설정.KRX_WATCHLIST.종목5 != NULL) 그리고(설정.KRX_WATCHLIST.종목5 != 없음)
     함수.붙이기(krx_watch_csv,|,설정.KRX_WATCHLIST.종목5)
     로그.출력(주식 관심종목 시드 로딩 완료)
   그외
@@ -1443,7 +1454,7 @@ dorafather와 샛별이가 여러분의 이슈에 적극적으로 소통할 것�
     함수.더하기(krx_del_idx,세션.krx_del_idx,1)
     처리.주식관심종목삭제순회
   그외
-    함수.붙이기(krx_new_csv,|,세션.리스트.krx_watch_list[세션.krx_del_idx])
+    함수.붙이기(krx_new_csv,세션.krx_ini_pipe,세션.리스트.krx_watch_list[세션.krx_del_idx])
     함수.더하기(krx_del_idx,세션.krx_del_idx,1)
     처리.주식관심종목삭제순회
 }
@@ -1451,10 +1462,65 @@ dorafather와 샛별이가 여러분의 이슈에 적극적으로 소통할 것�
 {
   만약에(세션.krx_del_found > 0)
     함수.저장(krx_watch_csv,세션.krx_new_csv)
-    함수.저장(krx_reply_text,문장.주식관심종목삭제완료문장)
-    전송.주식관심종목응답전송
+    함수.저장(krx_ini_del_found,0)
+    처리.주식관심종목ini삭제찾기1
   그외
     함수.저장(krx_reply_text,문장.주식관심종목삭제실패문장)
+    전송.주식관심종목응답전송
+}
+처리::KRX.주식관심종목ini삭제찾기1
+{
+  만약에(설정.KRX_WATCHLIST.종목1 === 세션.krx_del_match_prefix) 그리고(세션.krx_ini_del_found != 1)
+    함수.저장(krx_ini_slot_key,종목1)
+    함수.설정저장(세션.krx_ini_category,세션.krx_ini_slot_key,세션.krx_ini_clear_value)
+    함수.저장(krx_ini_del_found,1)
+    처리.주식관심종목ini삭제찾기2
+  그외
+    처리.주식관심종목ini삭제찾기2
+}
+처리::KRX.주식관심종목ini삭제찾기2
+{
+  만약에(설정.KRX_WATCHLIST.종목2 === 세션.krx_del_match_prefix) 그리고(세션.krx_ini_del_found != 1)
+    함수.저장(krx_ini_slot_key,종목2)
+    함수.설정저장(세션.krx_ini_category,세션.krx_ini_slot_key,세션.krx_ini_clear_value)
+    함수.저장(krx_ini_del_found,1)
+    처리.주식관심종목ini삭제찾기3
+  그외
+    처리.주식관심종목ini삭제찾기3
+}
+처리::KRX.주식관심종목ini삭제찾기3
+{
+  만약에(설정.KRX_WATCHLIST.종목3 === 세션.krx_del_match_prefix) 그리고(세션.krx_ini_del_found != 1)
+    함수.저장(krx_ini_slot_key,종목3)
+    함수.설정저장(세션.krx_ini_category,세션.krx_ini_slot_key,세션.krx_ini_clear_value)
+    함수.저장(krx_ini_del_found,1)
+    처리.주식관심종목ini삭제찾기4
+  그외
+    처리.주식관심종목ini삭제찾기4
+}
+처리::KRX.주식관심종목ini삭제찾기4
+{
+  만약에(설정.KRX_WATCHLIST.종목4 === 세션.krx_del_match_prefix) 그리고(세션.krx_ini_del_found != 1)
+    함수.저장(krx_ini_slot_key,종목4)
+    함수.설정저장(세션.krx_ini_category,세션.krx_ini_slot_key,세션.krx_ini_clear_value)
+    함수.저장(krx_ini_del_found,1)
+    처리.주식관심종목ini삭제찾기5
+  그외
+    처리.주식관심종목ini삭제찾기5
+}
+처리::KRX.주식관심종목ini삭제찾기5
+{
+  만약에(설정.KRX_WATCHLIST.종목5 === 세션.krx_del_match_prefix) 그리고(세션.krx_ini_del_found != 1)
+    함수.저장(krx_ini_slot_key,종목5)
+    함수.설정저장(세션.krx_ini_category,세션.krx_ini_slot_key,세션.krx_ini_clear_value)
+    처리.주식관심종목삭제응답
+  그외
+    처리.주식관심종목삭제응답
+}
+처리::KRX.주식관심종목삭제응답
+{
+  만약에(참)
+    함수.저장(krx_reply_text,문장.주식관심종목삭제완료문장)
     전송.주식관심종목응답전송
 }
 처리::TELEGRAM.텔레그램주식관심종목조회명령처리
@@ -1527,13 +1593,94 @@ dorafather와 샛별이가 여러분의 이슈에 적극적으로 소통할 것�
 }
 처리::KRX.주식종목검색성공
 {
+  만약에(참)
+    함수.저장(krx_ini_write_value,세션.krx_target_name)
+    함수.붙이기(krx_ini_write_value,세션.krx_ini_colon,세션.krx_resolved_code)
+    함수.저장(krx_ini_found,0)
+    처리.주식관심종목ini빈슬롯찾기1
+}
+처리::KRX.주식관심종목ini빈슬롯찾기1
+{
+  만약에(설정.KRX_WATCHLIST.종목1 == NULL)
+    함수.저장(krx_ini_slot_key,종목1)
+    함수.저장(krx_ini_found,1)
+    처리.주식관심종목ini쓰기
+  그외그외(설정.KRX_WATCHLIST.종목1 == 없음)
+    함수.저장(krx_ini_slot_key,종목1)
+    함수.저장(krx_ini_found,1)
+    처리.주식관심종목ini쓰기
+  그외
+    처리.주식관심종목ini빈슬롯찾기2
+}
+처리::KRX.주식관심종목ini빈슬롯찾기2
+{
+  만약에(설정.KRX_WATCHLIST.종목2 == NULL)
+    함수.저장(krx_ini_slot_key,종목2)
+    함수.저장(krx_ini_found,1)
+    처리.주식관심종목ini쓰기
+  그외그외(설정.KRX_WATCHLIST.종목2 == 없음)
+    함수.저장(krx_ini_slot_key,종목2)
+    함수.저장(krx_ini_found,1)
+    처리.주식관심종목ini쓰기
+  그외
+    처리.주식관심종목ini빈슬롯찾기3
+}
+처리::KRX.주식관심종목ini빈슬롯찾기3
+{
+  만약에(설정.KRX_WATCHLIST.종목3 == NULL)
+    함수.저장(krx_ini_slot_key,종목3)
+    함수.저장(krx_ini_found,1)
+    처리.주식관심종목ini쓰기
+  그외그외(설정.KRX_WATCHLIST.종목3 == 없음)
+    함수.저장(krx_ini_slot_key,종목3)
+    함수.저장(krx_ini_found,1)
+    처리.주식관심종목ini쓰기
+  그외
+    처리.주식관심종목ini빈슬롯찾기4
+}
+처리::KRX.주식관심종목ini빈슬롯찾기4
+{
+  만약에(설정.KRX_WATCHLIST.종목4 == NULL)
+    함수.저장(krx_ini_slot_key,종목4)
+    함수.저장(krx_ini_found,1)
+    처리.주식관심종목ini쓰기
+  그외그외(설정.KRX_WATCHLIST.종목4 == 없음)
+    함수.저장(krx_ini_slot_key,종목4)
+    함수.저장(krx_ini_found,1)
+    처리.주식관심종목ini쓰기
+  그외
+    처리.주식관심종목ini빈슬롯찾기5
+}
+처리::KRX.주식관심종목ini빈슬롯찾기5
+{
+  만약에(설정.KRX_WATCHLIST.종목5 == NULL)
+    함수.저장(krx_ini_slot_key,종목5)
+    함수.저장(krx_ini_found,1)
+    처리.주식관심종목ini쓰기
+  그외그외(설정.KRX_WATCHLIST.종목5 == 없음)
+    함수.저장(krx_ini_slot_key,종목5)
+    함수.저장(krx_ini_found,1)
+    처리.주식관심종목ini쓰기
+  그외
+    처리.주식관심종목ini쓰기
+}
+처리::KRX.주식관심종목ini쓰기
+{
+  만약에(세션.krx_ini_found == 1)
+    함수.설정저장(세션.krx_ini_category,세션.krx_ini_slot_key,세션.krx_ini_write_value)
+    처리.주식관심종목추가세션갱신
+  그외
+    함수.저장(krx_reply_text,문장.주식관심종목추가한도초과문장)
+    전송.주식관심종목응답전송
+}
+처리::KRX.주식관심종목추가세션갱신
+{
   만약에(세션.krx_watch_csv == 없음)
-    함수.저장(krx_watch_csv,세션.krx_target_name)
-    함수.붙이기(krx_watch_csv,:,세션.krx_resolved_code)
+    함수.저장(krx_watch_csv,세션.krx_ini_write_value)
     함수.저장(krx_reply_text,문장.주식관심종목추가완료문장)
     전송.주식관심종목응답전송
   그외
-    함수.붙이기(krx_watch_csv,|,세션.krx_target_name,:,세션.krx_resolved_code)
+    함수.붙이기(krx_watch_csv,세션.krx_ini_pipe,세션.krx_ini_write_value)
     함수.저장(krx_reply_text,문장.주식관심종목추가완료문장)
     전송.주식관심종목응답전송
 }
@@ -1681,20 +1828,25 @@ $$$세션.krx_watch_alert_text$$$}
 {$$$세션.krx_target_name$$$은(는) 등록된 관심종목이 아닙니다.}
 문장::TELEGRAM.주식관심종목조회빈목록문장
 {등록된 관심종목이 없습니다. "주식 관심종목 추가 삼성전자"처럼 말씀해주세요.}
+문장::TELEGRAM.주식관심종목추가한도초과문장
+{이미 관심종목이 5개 등록되어 있어 더 추가할 수 없습니다. 기존 종목을 삭제한 후 다시 시도해주세요.}
 처리::FLOW.기상청관심지역초기화
 {
   만약에(참)
     함수.저장(kma_watch_csv,없음)
     함수.저장(kma_seed_found,0)
+    함수.저장(kma_ini_category,KMA_WATCHLIST)
+    함수.저장(kma_ini_clear_value,없음)
+    함수.저장(kma_ini_pipe,|)
     처리.기상청지역시드확인1
 }
 처리::FLOW.기상청지역시드확인1
 {
-  만약에(설정.KMA_WATCHLIST.지역1 != NULL) 그리고(세션.kma_seed_found != 1)
+  만약에(설정.KMA_WATCHLIST.지역1 != NULL) 그리고(설정.KMA_WATCHLIST.지역1 != 없음) 그리고(세션.kma_seed_found != 1)
     함수.저장(kma_watch_csv,설정.KMA_WATCHLIST.지역1)
     함수.저장(kma_seed_found,1)
     처리.기상청지역시드확인2
-  그외그외(설정.KMA_WATCHLIST.지역1 != NULL)
+  그외그외(설정.KMA_WATCHLIST.지역1 != NULL) 그리고(설정.KMA_WATCHLIST.지역1 != 없음)
     함수.붙이기(kma_watch_csv,|,설정.KMA_WATCHLIST.지역1)
     처리.기상청지역시드확인2
   그외
@@ -1702,11 +1854,11 @@ $$$세션.krx_watch_alert_text$$$}
 }
 처리::FLOW.기상청지역시드확인2
 {
-  만약에(설정.KMA_WATCHLIST.지역2 != NULL) 그리고(세션.kma_seed_found != 1)
+  만약에(설정.KMA_WATCHLIST.지역2 != NULL) 그리고(설정.KMA_WATCHLIST.지역2 != 없음) 그리고(세션.kma_seed_found != 1)
     함수.저장(kma_watch_csv,설정.KMA_WATCHLIST.지역2)
     함수.저장(kma_seed_found,1)
     처리.기상청지역시드확인3
-  그외그외(설정.KMA_WATCHLIST.지역2 != NULL)
+  그외그외(설정.KMA_WATCHLIST.지역2 != NULL) 그리고(설정.KMA_WATCHLIST.지역2 != 없음)
     함수.붙이기(kma_watch_csv,|,설정.KMA_WATCHLIST.지역2)
     처리.기상청지역시드확인3
   그외
@@ -1714,11 +1866,11 @@ $$$세션.krx_watch_alert_text$$$}
 }
 처리::FLOW.기상청지역시드확인3
 {
-  만약에(설정.KMA_WATCHLIST.지역3 != NULL) 그리고(세션.kma_seed_found != 1)
+  만약에(설정.KMA_WATCHLIST.지역3 != NULL) 그리고(설정.KMA_WATCHLIST.지역3 != 없음) 그리고(세션.kma_seed_found != 1)
     함수.저장(kma_watch_csv,설정.KMA_WATCHLIST.지역3)
     함수.저장(kma_seed_found,1)
     처리.기상청지역시드확인4
-  그외그외(설정.KMA_WATCHLIST.지역3 != NULL)
+  그외그외(설정.KMA_WATCHLIST.지역3 != NULL) 그리고(설정.KMA_WATCHLIST.지역3 != 없음)
     함수.붙이기(kma_watch_csv,|,설정.KMA_WATCHLIST.지역3)
     처리.기상청지역시드확인4
   그외
@@ -1726,11 +1878,11 @@ $$$세션.krx_watch_alert_text$$$}
 }
 처리::FLOW.기상청지역시드확인4
 {
-  만약에(설정.KMA_WATCHLIST.지역4 != NULL) 그리고(세션.kma_seed_found != 1)
+  만약에(설정.KMA_WATCHLIST.지역4 != NULL) 그리고(설정.KMA_WATCHLIST.지역4 != 없음) 그리고(세션.kma_seed_found != 1)
     함수.저장(kma_watch_csv,설정.KMA_WATCHLIST.지역4)
     함수.저장(kma_seed_found,1)
     처리.기상청지역시드확인5
-  그외그외(설정.KMA_WATCHLIST.지역4 != NULL)
+  그외그외(설정.KMA_WATCHLIST.지역4 != NULL) 그리고(설정.KMA_WATCHLIST.지역4 != 없음)
     함수.붙이기(kma_watch_csv,|,설정.KMA_WATCHLIST.지역4)
     처리.기상청지역시드확인5
   그외
@@ -1738,11 +1890,11 @@ $$$세션.krx_watch_alert_text$$$}
 }
 처리::FLOW.기상청지역시드확인5
 {
-  만약에(설정.KMA_WATCHLIST.지역5 != NULL) 그리고(세션.kma_seed_found != 1)
+  만약에(설정.KMA_WATCHLIST.지역5 != NULL) 그리고(설정.KMA_WATCHLIST.지역5 != 없음) 그리고(세션.kma_seed_found != 1)
     함수.저장(kma_watch_csv,설정.KMA_WATCHLIST.지역5)
     함수.저장(kma_seed_found,1)
     로그.출력(기상청 관심지역 시드 로딩 완료)
-  그외그외(설정.KMA_WATCHLIST.지역5 != NULL)
+  그외그외(설정.KMA_WATCHLIST.지역5 != NULL) 그리고(설정.KMA_WATCHLIST.지역5 != 없음)
     함수.붙이기(kma_watch_csv,|,설정.KMA_WATCHLIST.지역5)
     로그.출력(기상청 관심지역 시드 로딩 완료)
   그외
@@ -1874,12 +2026,92 @@ $$$세션.krx_watch_alert_text$$$}
   만약에(세션.kma_region_found == 0)
     함수.저장(kma_reply_text,문장.KMA지역미지원문장)
     전송.기상청응답전송
-  그외그외(세션.kma_watch_csv == 없음)
+  그외
+    함수.저장(kma_ini_found,0)
+    처리.KMA지역ini빈슬롯찾기1
+}
+처리::KMA.KMA지역ini빈슬롯찾기1
+{
+  만약에(설정.KMA_WATCHLIST.지역1 == NULL)
+    함수.저장(kma_ini_slot_key,지역1)
+    함수.저장(kma_ini_found,1)
+    처리.KMA지역ini쓰기
+  그외그외(설정.KMA_WATCHLIST.지역1 == 없음)
+    함수.저장(kma_ini_slot_key,지역1)
+    함수.저장(kma_ini_found,1)
+    처리.KMA지역ini쓰기
+  그외
+    처리.KMA지역ini빈슬롯찾기2
+}
+처리::KMA.KMA지역ini빈슬롯찾기2
+{
+  만약에(설정.KMA_WATCHLIST.지역2 == NULL)
+    함수.저장(kma_ini_slot_key,지역2)
+    함수.저장(kma_ini_found,1)
+    처리.KMA지역ini쓰기
+  그외그외(설정.KMA_WATCHLIST.지역2 == 없음)
+    함수.저장(kma_ini_slot_key,지역2)
+    함수.저장(kma_ini_found,1)
+    처리.KMA지역ini쓰기
+  그외
+    처리.KMA지역ini빈슬롯찾기3
+}
+처리::KMA.KMA지역ini빈슬롯찾기3
+{
+  만약에(설정.KMA_WATCHLIST.지역3 == NULL)
+    함수.저장(kma_ini_slot_key,지역3)
+    함수.저장(kma_ini_found,1)
+    처리.KMA지역ini쓰기
+  그외그외(설정.KMA_WATCHLIST.지역3 == 없음)
+    함수.저장(kma_ini_slot_key,지역3)
+    함수.저장(kma_ini_found,1)
+    처리.KMA지역ini쓰기
+  그외
+    처리.KMA지역ini빈슬롯찾기4
+}
+처리::KMA.KMA지역ini빈슬롯찾기4
+{
+  만약에(설정.KMA_WATCHLIST.지역4 == NULL)
+    함수.저장(kma_ini_slot_key,지역4)
+    함수.저장(kma_ini_found,1)
+    처리.KMA지역ini쓰기
+  그외그외(설정.KMA_WATCHLIST.지역4 == 없음)
+    함수.저장(kma_ini_slot_key,지역4)
+    함수.저장(kma_ini_found,1)
+    처리.KMA지역ini쓰기
+  그외
+    처리.KMA지역ini빈슬롯찾기5
+}
+처리::KMA.KMA지역ini빈슬롯찾기5
+{
+  만약에(설정.KMA_WATCHLIST.지역5 == NULL)
+    함수.저장(kma_ini_slot_key,지역5)
+    함수.저장(kma_ini_found,1)
+    처리.KMA지역ini쓰기
+  그외그외(설정.KMA_WATCHLIST.지역5 == 없음)
+    함수.저장(kma_ini_slot_key,지역5)
+    함수.저장(kma_ini_found,1)
+    처리.KMA지역ini쓰기
+  그외
+    처리.KMA지역ini쓰기
+}
+처리::KMA.KMA지역ini쓰기
+{
+  만약에(세션.kma_ini_found == 1)
+    함수.설정저장(세션.kma_ini_category,세션.kma_ini_slot_key,세션.kma_target_name)
+    처리.KMA지역추가세션갱신
+  그외
+    함수.저장(kma_reply_text,문장.KMA지역추가한도초과문장)
+    전송.기상청응답전송
+}
+처리::KMA.KMA지역추가세션갱신
+{
+  만약에(세션.kma_watch_csv == 없음)
     함수.저장(kma_watch_csv,세션.kma_target_name)
     함수.저장(kma_reply_text,문장.KMA지역추가완료문장)
     전송.기상청응답전송
   그외
-    함수.붙이기(kma_watch_csv,|,세션.kma_target_name)
+    함수.붙이기(kma_watch_csv,세션.kma_ini_pipe,세션.kma_target_name)
     함수.저장(kma_reply_text,문장.KMA지역추가완료문장)
     전송.기상청응답전송
 }
@@ -1919,7 +2151,7 @@ $$$세션.krx_watch_alert_text$$$}
     함수.더하기(kma_del_idx,세션.kma_del_idx,1)
     처리.KMA지역삭제순회
   그외
-    함수.붙이기(kma_new_csv,|,세션.리스트.kma_watch_list[세션.kma_del_idx])
+    함수.붙이기(kma_new_csv,세션.kma_ini_pipe,세션.리스트.kma_watch_list[세션.kma_del_idx])
     함수.더하기(kma_del_idx,세션.kma_del_idx,1)
     처리.KMA지역삭제순회
 }
@@ -1927,10 +2159,65 @@ $$$세션.krx_watch_alert_text$$$}
 {
   만약에(세션.kma_del_found > 0)
     함수.저장(kma_watch_csv,세션.kma_new_csv)
-    함수.저장(kma_reply_text,문장.KMA지역삭제완료문장)
-    전송.기상청응답전송
+    함수.저장(kma_ini_del_found,0)
+    처리.KMA지역ini삭제찾기1
   그외
     함수.저장(kma_reply_text,문장.KMA지역삭제실패문장)
+    전송.기상청응답전송
+}
+처리::KMA.KMA지역ini삭제찾기1
+{
+  만약에(설정.KMA_WATCHLIST.지역1 == 세션.kma_target_name) 그리고(세션.kma_ini_del_found != 1)
+    함수.저장(kma_ini_slot_key,지역1)
+    함수.설정저장(세션.kma_ini_category,세션.kma_ini_slot_key,세션.kma_ini_clear_value)
+    함수.저장(kma_ini_del_found,1)
+    처리.KMA지역ini삭제찾기2
+  그외
+    처리.KMA지역ini삭제찾기2
+}
+처리::KMA.KMA지역ini삭제찾기2
+{
+  만약에(설정.KMA_WATCHLIST.지역2 == 세션.kma_target_name) 그리고(세션.kma_ini_del_found != 1)
+    함수.저장(kma_ini_slot_key,지역2)
+    함수.설정저장(세션.kma_ini_category,세션.kma_ini_slot_key,세션.kma_ini_clear_value)
+    함수.저장(kma_ini_del_found,1)
+    처리.KMA지역ini삭제찾기3
+  그외
+    처리.KMA지역ini삭제찾기3
+}
+처리::KMA.KMA지역ini삭제찾기3
+{
+  만약에(설정.KMA_WATCHLIST.지역3 == 세션.kma_target_name) 그리고(세션.kma_ini_del_found != 1)
+    함수.저장(kma_ini_slot_key,지역3)
+    함수.설정저장(세션.kma_ini_category,세션.kma_ini_slot_key,세션.kma_ini_clear_value)
+    함수.저장(kma_ini_del_found,1)
+    처리.KMA지역ini삭제찾기4
+  그외
+    처리.KMA지역ini삭제찾기4
+}
+처리::KMA.KMA지역ini삭제찾기4
+{
+  만약에(설정.KMA_WATCHLIST.지역4 == 세션.kma_target_name) 그리고(세션.kma_ini_del_found != 1)
+    함수.저장(kma_ini_slot_key,지역4)
+    함수.설정저장(세션.kma_ini_category,세션.kma_ini_slot_key,세션.kma_ini_clear_value)
+    함수.저장(kma_ini_del_found,1)
+    처리.KMA지역ini삭제찾기5
+  그외
+    처리.KMA지역ini삭제찾기5
+}
+처리::KMA.KMA지역ini삭제찾기5
+{
+  만약에(설정.KMA_WATCHLIST.지역5 == 세션.kma_target_name) 그리고(세션.kma_ini_del_found != 1)
+    함수.저장(kma_ini_slot_key,지역5)
+    함수.설정저장(세션.kma_ini_category,세션.kma_ini_slot_key,세션.kma_ini_clear_value)
+    처리.KMA지역삭제응답
+  그외
+    처리.KMA지역삭제응답
+}
+처리::KMA.KMA지역삭제응답
+{
+  만약에(참)
+    함수.저장(kma_reply_text,문장.KMA지역삭제완료문장)
     전송.기상청응답전송
 }
 처리::KMA.KMA지역좌표확인
@@ -2269,4 +2556,663 @@ $$$세션.kma_watch_alert_text$$$}
 {$$$세션.kma_target_name$$$은(는) 등록된 관심지역이 아닙니다.}
 문장::TELEGRAM.KMA지역조회빈목록문장
 {등록된 관심지역이 없습니다. "기상청 지역 추가 서울"처럼 말씀해주세요.}
-
+문장::TELEGRAM.KMA지역추가한도초과문장
+{이미 관심지역이 5개 등록되어 있어 더 추가할 수 없습니다. 기존 지역을 삭제한 후 다시 시도해주세요.}
+처리::FLOW.미세먼지관심지역초기화
+{
+  만약에(참)
+    함수.저장(keco_watch_csv,없음)
+    함수.저장(keco_seed_found,0)
+    함수.저장(keco_ini_category,KECO_WATCHLIST)
+    함수.저장(keco_ini_clear_value,없음)
+    함수.저장(keco_ini_pipe,|)
+    처리.미세먼지지역시드확인1
+}
+처리::FLOW.미세먼지지역시드확인1
+{
+  만약에(설정.KECO_WATCHLIST.지역1 != NULL) 그리고(설정.KECO_WATCHLIST.지역1 != 없음) 그리고(세션.keco_seed_found != 1)
+    함수.저장(keco_watch_csv,설정.KECO_WATCHLIST.지역1)
+    함수.저장(keco_seed_found,1)
+    처리.미세먼지지역시드확인2
+  그외그외(설정.KECO_WATCHLIST.지역1 != NULL) 그리고(설정.KECO_WATCHLIST.지역1 != 없음)
+    함수.붙이기(keco_watch_csv,|,설정.KECO_WATCHLIST.지역1)
+    처리.미세먼지지역시드확인2
+  그외
+    처리.미세먼지지역시드확인2
+}
+처리::FLOW.미세먼지지역시드확인2
+{
+  만약에(설정.KECO_WATCHLIST.지역2 != NULL) 그리고(설정.KECO_WATCHLIST.지역2 != 없음) 그리고(세션.keco_seed_found != 1)
+    함수.저장(keco_watch_csv,설정.KECO_WATCHLIST.지역2)
+    함수.저장(keco_seed_found,1)
+    처리.미세먼지지역시드확인3
+  그외그외(설정.KECO_WATCHLIST.지역2 != NULL) 그리고(설정.KECO_WATCHLIST.지역2 != 없음)
+    함수.붙이기(keco_watch_csv,|,설정.KECO_WATCHLIST.지역2)
+    처리.미세먼지지역시드확인3
+  그외
+    처리.미세먼지지역시드확인3
+}
+처리::FLOW.미세먼지지역시드확인3
+{
+  만약에(설정.KECO_WATCHLIST.지역3 != NULL) 그리고(설정.KECO_WATCHLIST.지역3 != 없음) 그리고(세션.keco_seed_found != 1)
+    함수.저장(keco_watch_csv,설정.KECO_WATCHLIST.지역3)
+    함수.저장(keco_seed_found,1)
+    처리.미세먼지지역시드확인4
+  그외그외(설정.KECO_WATCHLIST.지역3 != NULL) 그리고(설정.KECO_WATCHLIST.지역3 != 없음)
+    함수.붙이기(keco_watch_csv,|,설정.KECO_WATCHLIST.지역3)
+    처리.미세먼지지역시드확인4
+  그외
+    처리.미세먼지지역시드확인4
+}
+처리::FLOW.미세먼지지역시드확인4
+{
+  만약에(설정.KECO_WATCHLIST.지역4 != NULL) 그리고(설정.KECO_WATCHLIST.지역4 != 없음) 그리고(세션.keco_seed_found != 1)
+    함수.저장(keco_watch_csv,설정.KECO_WATCHLIST.지역4)
+    함수.저장(keco_seed_found,1)
+    처리.미세먼지지역시드확인5
+  그외그외(설정.KECO_WATCHLIST.지역4 != NULL) 그리고(설정.KECO_WATCHLIST.지역4 != 없음)
+    함수.붙이기(keco_watch_csv,|,설정.KECO_WATCHLIST.지역4)
+    처리.미세먼지지역시드확인5
+  그외
+    처리.미세먼지지역시드확인5
+}
+처리::FLOW.미세먼지지역시드확인5
+{
+  만약에(설정.KECO_WATCHLIST.지역5 != NULL) 그리고(설정.KECO_WATCHLIST.지역5 != 없음) 그리고(세션.keco_seed_found != 1)
+    함수.저장(keco_watch_csv,설정.KECO_WATCHLIST.지역5)
+    함수.저장(keco_seed_found,1)
+    로그.출력(미세먼지 관심지역 시드 로딩 완료)
+  그외그외(설정.KECO_WATCHLIST.지역5 != NULL) 그리고(설정.KECO_WATCHLIST.지역5 != 없음)
+    함수.붙이기(keco_watch_csv,|,설정.KECO_WATCHLIST.지역5)
+    로그.출력(미세먼지 관심지역 시드 로딩 완료)
+  그외
+    로그.출력(미세먼지 관심지역 시드 로딩 완료)
+}
+처리::FLOW.미세먼지알림확인처리
+{
+  만약에(참)
+    함수.날짜(keco_alert_hour_now,%H)
+    타이머.미세먼지알림타이머
+    처리.미세먼지알림시각비교
+}
+처리::FLOW.미세먼지알림시각비교
+{
+  만약에(세션.keco_alert_hour_now == 설정.KECO.alert_hour)
+    함수.저장(keco_mode,폴링)
+    처리.KECO관심지역순회시작
+  그외
+    로그.출력(미세먼지 알림 스킵 - 시각 불일치)
+}
+처리::TELEGRAM.텔레그램미세먼지명령처리
+{
+  만약에(참)
+    함수.단어분리(keco_cmd_word_list,수신메시지.result[0].message.text)
+    함수.단어합치기(cmd_rest,세션.리스트.keco_cmd_word_list,1)
+    함수.앞자리비교(cmd_지역,세션.cmd_rest,지역)
+    처리.텔레그램미세먼지명령분기
+}
+처리::TELEGRAM.텔레그램미세먼지명령분기
+{
+  만약에(세션.cmd_지역 == 1)
+    함수.저장(pending_reply_chat_id,수신메시지.result[0].message.chat.id)
+    처리.텔레그램미세먼지지역명령처리
+  그외
+    함수.저장(pending_reply_chat_id,수신메시지.result[0].message.chat.id)
+    함수.저장(keco_target_name,세션.cmd_rest)
+    함수.저장(keco_mode,조회단건)
+    처리.KECO지역명확정
+}
+처리::KECO.KECO지역명확정
+{
+  만약에(세션.keco_target_name != NULL)
+    처리.KECO지역확인
+  그외
+    함수.저장(keco_target_name,설정.KECO.default_region)
+    처리.KECO지역확인
+}
+처리::TELEGRAM.텔레그램미세먼지지역명령처리
+{
+  만약에(참)
+    함수.단어분리(keco_region_word_list,세션.cmd_rest)
+    함수.단어합치기(keco_region_rest,세션.리스트.keco_region_word_list,1)
+    함수.앞자리비교(cmd_지역추가,세션.keco_region_rest,추가)
+    함수.앞자리비교(cmd_지역삭제,세션.keco_region_rest,삭제)
+    함수.앞자리비교(cmd_지역조회,세션.keco_region_rest,조회)
+    처리.텔레그램미세먼지지역명령분기
+}
+처리::TELEGRAM.텔레그램미세먼지지역명령분기
+{
+  만약에(세션.cmd_지역추가 == 1)
+    처리.텔레그램미세먼지지역추가명령처리
+  그외그외(세션.cmd_지역삭제 == 1)
+    처리.텔레그램미세먼지지역삭제명령처리
+  그외그외(세션.cmd_지역조회 == 1)
+    처리.텔레그램미세먼지지역조회명령처리
+  그외
+    전송.델레그램응답전송
+}
+처리::TELEGRAM.텔레그램미세먼지지역조회명령처리
+{
+  만약에(참)
+    함수.저장(keco_mode,지역조회)
+    처리.KECO관심지역순회시작
+}
+처리::TELEGRAM.텔레그램미세먼지지역추가명령처리
+{
+  만약에(참)
+    함수.단어분리(keco_add_word_list,세션.keco_region_rest)
+    함수.단어합치기(keco_target_name,세션.리스트.keco_add_word_list,1)
+    처리.KECO지역명검증
+}
+처리::KECO.KECO지역명검증
+{
+  만약에(세션.keco_target_name == 서울)
+    함수.저장(keco_region_found,1)
+    처리.KECO지역추가확정
+  그외그외(세션.keco_target_name == 부산)
+    함수.저장(keco_region_found,1)
+    처리.KECO지역추가확정
+  그외그외(세션.keco_target_name == 대구)
+    함수.저장(keco_region_found,1)
+    처리.KECO지역추가확정
+  그외그외(세션.keco_target_name == 인천)
+    함수.저장(keco_region_found,1)
+    처리.KECO지역추가확정
+  그외그외(세션.keco_target_name == 광주)
+    함수.저장(keco_region_found,1)
+    처리.KECO지역추가확정
+  그외그외(세션.keco_target_name == 대전)
+    함수.저장(keco_region_found,1)
+    처리.KECO지역추가확정
+  그외그외(세션.keco_target_name == 울산)
+    함수.저장(keco_region_found,1)
+    처리.KECO지역추가확정
+  그외그외(세션.keco_target_name == 세종)
+    함수.저장(keco_region_found,1)
+    처리.KECO지역추가확정
+  그외그외(세션.keco_target_name == 경기)
+    함수.저장(keco_region_found,1)
+    처리.KECO지역추가확정
+  그외그외(세션.keco_target_name == 강원)
+    함수.저장(keco_region_found,1)
+    처리.KECO지역추가확정
+  그외그외(세션.keco_target_name == 충북)
+    함수.저장(keco_region_found,1)
+    처리.KECO지역추가확정
+  그외그외(세션.keco_target_name == 충남)
+    함수.저장(keco_region_found,1)
+    처리.KECO지역추가확정
+  그외그외(세션.keco_target_name == 전북)
+    함수.저장(keco_region_found,1)
+    처리.KECO지역추가확정
+  그외그외(세션.keco_target_name == 전남)
+    함수.저장(keco_region_found,1)
+    처리.KECO지역추가확정
+  그외그외(세션.keco_target_name == 경북)
+    함수.저장(keco_region_found,1)
+    처리.KECO지역추가확정
+  그외그외(세션.keco_target_name == 경남)
+    함수.저장(keco_region_found,1)
+    처리.KECO지역추가확정
+  그외그외(세션.keco_target_name == 제주)
+    함수.저장(keco_region_found,1)
+    처리.KECO지역추가확정
+  그외
+    함수.저장(keco_region_found,0)
+    처리.KECO지역추가확정
+}
+처리::KECO.KECO지역추가확정
+{
+  만약에(세션.keco_region_found == 0)
+    함수.저장(keco_reply_text,문장.KECO지역미지원문장)
+    전송.미세먼지응답전송
+  그외
+    함수.저장(keco_ini_found,0)
+    처리.KECO지역ini빈슬롯찾기1
+}
+처리::KECO.KECO지역ini빈슬롯찾기1
+{
+  만약에(설정.KECO_WATCHLIST.지역1 == NULL)
+    함수.저장(keco_ini_slot_key,지역1)
+    함수.저장(keco_ini_found,1)
+    처리.KECO지역ini쓰기
+  그외그외(설정.KECO_WATCHLIST.지역1 == 없음)
+    함수.저장(keco_ini_slot_key,지역1)
+    함수.저장(keco_ini_found,1)
+    처리.KECO지역ini쓰기
+  그외
+    처리.KECO지역ini빈슬롯찾기2
+}
+처리::KECO.KECO지역ini빈슬롯찾기2
+{
+  만약에(설정.KECO_WATCHLIST.지역2 == NULL)
+    함수.저장(keco_ini_slot_key,지역2)
+    함수.저장(keco_ini_found,1)
+    처리.KECO지역ini쓰기
+  그외그외(설정.KECO_WATCHLIST.지역2 == 없음)
+    함수.저장(keco_ini_slot_key,지역2)
+    함수.저장(keco_ini_found,1)
+    처리.KECO지역ini쓰기
+  그외
+    처리.KECO지역ini빈슬롯찾기3
+}
+처리::KECO.KECO지역ini빈슬롯찾기3
+{
+  만약에(설정.KECO_WATCHLIST.지역3 == NULL)
+    함수.저장(keco_ini_slot_key,지역3)
+    함수.저장(keco_ini_found,1)
+    처리.KECO지역ini쓰기
+  그외그외(설정.KECO_WATCHLIST.지역3 == 없음)
+    함수.저장(keco_ini_slot_key,지역3)
+    함수.저장(keco_ini_found,1)
+    처리.KECO지역ini쓰기
+  그외
+    처리.KECO지역ini빈슬롯찾기4
+}
+처리::KECO.KECO지역ini빈슬롯찾기4
+{
+  만약에(설정.KECO_WATCHLIST.지역4 == NULL)
+    함수.저장(keco_ini_slot_key,지역4)
+    함수.저장(keco_ini_found,1)
+    처리.KECO지역ini쓰기
+  그외그외(설정.KECO_WATCHLIST.지역4 == 없음)
+    함수.저장(keco_ini_slot_key,지역4)
+    함수.저장(keco_ini_found,1)
+    처리.KECO지역ini쓰기
+  그외
+    처리.KECO지역ini빈슬롯찾기5
+}
+처리::KECO.KECO지역ini빈슬롯찾기5
+{
+  만약에(설정.KECO_WATCHLIST.지역5 == NULL)
+    함수.저장(keco_ini_slot_key,지역5)
+    함수.저장(keco_ini_found,1)
+    처리.KECO지역ini쓰기
+  그외그외(설정.KECO_WATCHLIST.지역5 == 없음)
+    함수.저장(keco_ini_slot_key,지역5)
+    함수.저장(keco_ini_found,1)
+    처리.KECO지역ini쓰기
+  그외
+    처리.KECO지역ini쓰기
+}
+처리::KECO.KECO지역ini쓰기
+{
+  만약에(세션.keco_ini_found == 1)
+    함수.설정저장(세션.keco_ini_category,세션.keco_ini_slot_key,세션.keco_target_name)
+    처리.KECO지역추가세션갱신
+  그외
+    함수.저장(keco_reply_text,문장.KECO지역추가한도초과문장)
+    전송.미세먼지응답전송
+}
+처리::KECO.KECO지역추가세션갱신
+{
+  만약에(세션.keco_watch_csv == 없음)
+    함수.저장(keco_watch_csv,세션.keco_target_name)
+    함수.저장(keco_reply_text,문장.KECO지역추가완료문장)
+    전송.미세먼지응답전송
+  그외
+    함수.붙이기(keco_watch_csv,세션.keco_ini_pipe,세션.keco_target_name)
+    함수.저장(keco_reply_text,문장.KECO지역추가완료문장)
+    전송.미세먼지응답전송
+}
+처리::TELEGRAM.텔레그램미세먼지지역삭제명령처리
+{
+  만약에(참)
+    함수.단어분리(keco_del_word_list,세션.keco_region_rest)
+    함수.단어합치기(keco_target_name,세션.리스트.keco_del_word_list,1)
+    함수.쪼개기(keco_watch_list,세션.keco_watch_csv,|)
+    함수.저장(keco_del_idx,0)
+    함수.저장(keco_del_found,0)
+    함수.저장(keco_new_csv,없음)
+    함수.저장(keco_new_found,0)
+    처리.KECO지역삭제순회
+}
+처리::KECO.KECO지역삭제순회
+{
+  만약에(세션.keco_del_idx >= 세션.리스트.keco_watch_list.SIZE)
+    처리.KECO지역삭제완료
+  그외
+    처리.KECO지역삭제항목검사
+}
+처리::KECO.KECO지역삭제항목검사
+{
+  만약에(세션.리스트.keco_watch_list[세션.keco_del_idx] == 세션.keco_target_name)
+    함수.더하기(keco_del_found,세션.keco_del_found,1)
+    함수.더하기(keco_del_idx,세션.keco_del_idx,1)
+    처리.KECO지역삭제순회
+  그외
+    처리.KECO지역삭제보존
+}
+처리::KECO.KECO지역삭제보존
+{
+  만약에(세션.keco_new_found == 0)
+    함수.저장(keco_new_csv,세션.리스트.keco_watch_list[세션.keco_del_idx])
+    함수.저장(keco_new_found,1)
+    함수.더하기(keco_del_idx,세션.keco_del_idx,1)
+    처리.KECO지역삭제순회
+  그외
+    함수.붙이기(keco_new_csv,세션.keco_ini_pipe,세션.리스트.keco_watch_list[세션.keco_del_idx])
+    함수.더하기(keco_del_idx,세션.keco_del_idx,1)
+    처리.KECO지역삭제순회
+}
+처리::KECO.KECO지역삭제완료
+{
+  만약에(세션.keco_del_found > 0)
+    함수.저장(keco_watch_csv,세션.keco_new_csv)
+    함수.저장(keco_ini_del_found,0)
+    처리.KECO지역ini삭제찾기1
+  그외
+    함수.저장(keco_reply_text,문장.KECO지역삭제실패문장)
+    전송.미세먼지응답전송
+}
+처리::KECO.KECO지역ini삭제찾기1
+{
+  만약에(설정.KECO_WATCHLIST.지역1 == 세션.keco_target_name) 그리고(세션.keco_ini_del_found != 1)
+    함수.저장(keco_ini_slot_key,지역1)
+    함수.설정저장(세션.keco_ini_category,세션.keco_ini_slot_key,세션.keco_ini_clear_value)
+    함수.저장(keco_ini_del_found,1)
+    처리.KECO지역ini삭제찾기2
+  그외
+    처리.KECO지역ini삭제찾기2
+}
+처리::KECO.KECO지역ini삭제찾기2
+{
+  만약에(설정.KECO_WATCHLIST.지역2 == 세션.keco_target_name) 그리고(세션.keco_ini_del_found != 1)
+    함수.저장(keco_ini_slot_key,지역2)
+    함수.설정저장(세션.keco_ini_category,세션.keco_ini_slot_key,세션.keco_ini_clear_value)
+    함수.저장(keco_ini_del_found,1)
+    처리.KECO지역ini삭제찾기3
+  그외
+    처리.KECO지역ini삭제찾기3
+}
+처리::KECO.KECO지역ini삭제찾기3
+{
+  만약에(설정.KECO_WATCHLIST.지역3 == 세션.keco_target_name) 그리고(세션.keco_ini_del_found != 1)
+    함수.저장(keco_ini_slot_key,지역3)
+    함수.설정저장(세션.keco_ini_category,세션.keco_ini_slot_key,세션.keco_ini_clear_value)
+    함수.저장(keco_ini_del_found,1)
+    처리.KECO지역ini삭제찾기4
+  그외
+    처리.KECO지역ini삭제찾기4
+}
+처리::KECO.KECO지역ini삭제찾기4
+{
+  만약에(설정.KECO_WATCHLIST.지역4 == 세션.keco_target_name) 그리고(세션.keco_ini_del_found != 1)
+    함수.저장(keco_ini_slot_key,지역4)
+    함수.설정저장(세션.keco_ini_category,세션.keco_ini_slot_key,세션.keco_ini_clear_value)
+    함수.저장(keco_ini_del_found,1)
+    처리.KECO지역ini삭제찾기5
+  그외
+    처리.KECO지역ini삭제찾기5
+}
+처리::KECO.KECO지역ini삭제찾기5
+{
+  만약에(설정.KECO_WATCHLIST.지역5 == 세션.keco_target_name) 그리고(세션.keco_ini_del_found != 1)
+    함수.저장(keco_ini_slot_key,지역5)
+    함수.설정저장(세션.keco_ini_category,세션.keco_ini_slot_key,세션.keco_ini_clear_value)
+    처리.KECO지역삭제응답
+  그외
+    처리.KECO지역삭제응답
+}
+처리::KECO.KECO지역삭제응답
+{
+  만약에(참)
+    함수.저장(keco_reply_text,문장.KECO지역삭제완료문장)
+    전송.미세먼지응답전송
+}
+처리::KECO.KECO지역확인
+{
+  만약에(세션.keco_target_name == 서울)
+    함수.저장(keco_region_found,1)
+    처리.KECO지역확인완료
+  그외그외(세션.keco_target_name == 부산)
+    함수.저장(keco_region_found,1)
+    처리.KECO지역확인완료
+  그외그외(세션.keco_target_name == 대구)
+    함수.저장(keco_region_found,1)
+    처리.KECO지역확인완료
+  그외그외(세션.keco_target_name == 인천)
+    함수.저장(keco_region_found,1)
+    처리.KECO지역확인완료
+  그외그외(세션.keco_target_name == 광주)
+    함수.저장(keco_region_found,1)
+    처리.KECO지역확인완료
+  그외그외(세션.keco_target_name == 대전)
+    함수.저장(keco_region_found,1)
+    처리.KECO지역확인완료
+  그외그외(세션.keco_target_name == 울산)
+    함수.저장(keco_region_found,1)
+    처리.KECO지역확인완료
+  그외그외(세션.keco_target_name == 세종)
+    함수.저장(keco_region_found,1)
+    처리.KECO지역확인완료
+  그외그외(세션.keco_target_name == 경기)
+    함수.저장(keco_region_found,1)
+    처리.KECO지역확인완료
+  그외그외(세션.keco_target_name == 강원)
+    함수.저장(keco_region_found,1)
+    처리.KECO지역확인완료
+  그외그외(세션.keco_target_name == 충북)
+    함수.저장(keco_region_found,1)
+    처리.KECO지역확인완료
+  그외그외(세션.keco_target_name == 충남)
+    함수.저장(keco_region_found,1)
+    처리.KECO지역확인완료
+  그외그외(세션.keco_target_name == 전북)
+    함수.저장(keco_region_found,1)
+    처리.KECO지역확인완료
+  그외그외(세션.keco_target_name == 전남)
+    함수.저장(keco_region_found,1)
+    처리.KECO지역확인완료
+  그외그외(세션.keco_target_name == 경북)
+    함수.저장(keco_region_found,1)
+    처리.KECO지역확인완료
+  그외그외(세션.keco_target_name == 경남)
+    함수.저장(keco_region_found,1)
+    처리.KECO지역확인완료
+  그외그외(세션.keco_target_name == 제주)
+    함수.저장(keco_region_found,1)
+    처리.KECO지역확인완료
+  그외
+    함수.저장(keco_region_found,0)
+    처리.KECO지역확인완료
+}
+처리::KECO.KECO지역확인완료
+{
+  만약에(세션.keco_region_found == 0) 그리고(세션.keco_mode == 조회단건)
+    함수.저장(keco_reply_text,문장.KECO지역미지원문장)
+    전송.미세먼지응답전송
+  그외그외(세션.keco_region_found == 0)
+    함수.더하기(keco_walk_idx,세션.keco_walk_idx,1)
+    처리.KECO관심지역순회다음
+  그외
+    전송.KECO대기오염조회전송
+}
+처리::KECO.KECO응답분기처리
+{
+  만약에(세션.keco_mode == 조회단건)
+    함수.객체저장(keco_stations,수신메시지.response.body.items)
+    처리.KECO첫측정소추출
+  그외그외(세션.keco_mode == 폴링)
+    함수.객체저장(keco_stations,수신메시지.response.body.items)
+    처리.KECO첫측정소추출
+  그외그외(세션.keco_mode == 지역조회)
+    함수.객체저장(keco_stations,수신메시지.response.body.items)
+    처리.KECO첫측정소추출
+  그외
+    로그.출력(KECO 알 수 없는 응답 모드)
+}
+처리::KECO.KECO첫측정소추출
+{
+  만약에(세션.객체.keco_stations[0].stationName != NULL)
+    함수.저장(keco_datatime,세션.객체.keco_stations[0].dataTime)
+    함수.저장(keco_khai_value,세션.객체.keco_stations[0].khaiValue)
+    함수.저장(keco_khai_grade,세션.객체.keco_stations[0].khaiGrade)
+    함수.저장(keco_pm10_value,세션.객체.keco_stations[0].pm10Value)
+    함수.저장(keco_pm25_value,세션.객체.keco_stations[0].pm25Value)
+    처리.KECO등급변환
+  그외그외(세션.keco_mode == 조회단건)
+    함수.저장(keco_reply_text,문장.KECO측정소없음문장)
+    전송.미세먼지응답전송
+  그외
+    함수.더하기(keco_walk_idx,세션.keco_walk_idx,1)
+    처리.KECO관심지역순회다음
+}
+처리::KECO.KECO등급변환
+{
+  만약에(세션.keco_khai_grade == 1)
+    함수.저장(keco_grade_text,좋음)
+    처리.KECO임계값판정
+  그외그외(세션.keco_khai_grade == 2)
+    함수.저장(keco_grade_text,보통)
+    처리.KECO임계값판정
+  그외그외(세션.keco_khai_grade == 3)
+    함수.저장(keco_grade_text,나쁨)
+    처리.KECO임계값판정
+  그외그외(세션.keco_khai_grade == 4)
+    함수.저장(keco_grade_text,매우나쁨)
+    처리.KECO임계값판정
+  그외
+    함수.저장(keco_grade_text,정보없음)
+    처리.KECO임계값판정
+}
+처리::KECO.KECO임계값판정
+{
+  만약에(세션.keco_mode == 조회단건)
+    처리.KECO단건응답조립
+  그외그외(세션.keco_mode == 지역조회)
+    처리.KECO지역조회라인추가
+  그외그외(세션.keco_khai_grade >= 3)
+    처리.KECO감시라인추가
+  그외
+    함수.더하기(keco_walk_idx,세션.keco_walk_idx,1)
+    처리.KECO관심지역순회다음
+}
+처리::KECO.KECO단건응답조립
+{
+  만약에(참)
+    함수.저장(keco_reply_text,문장.KECO미세먼지요약문장)
+    전송.미세먼지응답전송
+}
+처리::KECO.KECO감시라인추가
+{
+  만약에(세션.keco_walk_found == 0)
+    함수.저장(keco_walk_lines,문장.KECO감시알림라인문장)
+    함수.저장(keco_walk_found,1)
+    함수.더하기(keco_walk_idx,세션.keco_walk_idx,1)
+    처리.KECO관심지역순회다음
+  그외
+    함수.붙이기(keco_walk_lines,|,문장.KECO감시알림라인문장)
+    함수.더하기(keco_walk_idx,세션.keco_walk_idx,1)
+    처리.KECO관심지역순회다음
+}
+처리::KECO.KECO지역조회라인추가
+{
+  만약에(세션.keco_walk_found == 0)
+    함수.저장(keco_walk_lines,문장.KECO미세먼지요약문장)
+    함수.저장(keco_walk_found,1)
+    함수.더하기(keco_walk_idx,세션.keco_walk_idx,1)
+    처리.KECO관심지역순회다음
+  그외
+    함수.붙이기(keco_walk_lines,|,문장.KECO미세먼지요약문장)
+    함수.더하기(keco_walk_idx,세션.keco_walk_idx,1)
+    처리.KECO관심지역순회다음
+}
+처리::KECO.KECO관심지역순회시작
+{
+  만약에(세션.keco_watch_csv == 없음)
+    함수.저장(keco_walk_lines,없음)
+    처리.KECO관심지역순회완료
+  그외
+    함수.쪼개기(keco_watch_list,세션.keco_watch_csv,|)
+    함수.저장(keco_walk_idx,0)
+    함수.저장(keco_walk_found,0)
+    함수.저장(keco_walk_lines,없음)
+    처리.KECO관심지역순회다음
+}
+처리::KECO.KECO관심지역순회다음
+{
+  만약에(세션.keco_walk_idx >= 세션.리스트.keco_watch_list.SIZE)
+    처리.KECO관심지역순회완료
+  그외
+    함수.저장(keco_target_name,세션.리스트.keco_watch_list[세션.keco_walk_idx])
+    처리.KECO지역확인
+}
+처리::KECO.KECO관심지역순회완료
+{
+  만약에(세션.keco_mode == 지역조회) 그리고(세션.keco_walk_lines != 없음)
+    함수.저장(keco_reply_text,세션.keco_walk_lines)
+    전송.미세먼지응답전송
+  그외그외(세션.keco_mode == 지역조회)
+    함수.저장(keco_reply_text,문장.KECO지역조회빈목록문장)
+    전송.미세먼지응답전송
+  그외그외(세션.keco_walk_lines != 없음)
+    함수.저장(keco_watch_alert_text,세션.keco_walk_lines)
+    전송.미세먼지알림텔레그램전송
+  그외
+    로그.출력(미세먼지 관심지역 감시 - 나쁨 이상 지역 없음, 알림 생략)
+}
+전송::KECO.KECO대기오염조회전송
+{
+  전송메시지.메소드 = GET
+  전송메시지.주소.도메인 = 설정.KECO.domain
+  전송메시지.주소.경로 = /getCtprvnRltmMesureDnsty
+  전송메시지.주소.파라미터[0].key = serviceKey
+  전송메시지.주소.파라미터[0].val = 설정.KECO.service_key
+  전송메시지.주소.파라미터[1].key = returnType
+  전송메시지.주소.파라미터[1].val = json
+  전송메시지.주소.파라미터[2].key = numOfRows
+  전송메시지.주소.파라미터[2].val = 100
+  전송메시지.주소.파라미터[3].key = pageNo
+  전송메시지.주소.파라미터[3].val = 1
+  전송메시지.주소.파라미터[4].key = sidoName
+  전송메시지.주소.파라미터[4].val = 세션.keco_target_name
+  전송메시지.주소.파라미터[5].key = ver
+  전송메시지.주소.파라미터[5].val = 1.5
+}
+전송::TELEGRAM.미세먼지응답전송
+{
+  전송메시지.메소드 = GET
+  전송메시지.주소.도메인 = 설정.TELEGRAM.domain
+  전송메시지.주소.경로 = 문장.텔레그램응답경로
+  전송메시지.주소.파라미터[0].key = chat_id
+  전송메시지.주소.파라미터[0].val = 세션.pending_reply_chat_id
+  전송메시지.주소.파라미터[1].key = text
+  전송메시지.주소.파라미터[1].val = 세션.keco_reply_text
+}
+전송::TELEGRAM.미세먼지알림텔레그램전송
+{
+  전송메시지.메소드 = GET
+  전송메시지.주소.도메인 = 설정.TELEGRAM.domain
+  전송메시지.주소.경로 = 문장.텔레그램응답경로
+  전송메시지.주소.파라미터[0].key = chat_id
+  전송메시지.주소.파라미터[0].val = 설정.TELEGRAM.my_chat_id
+  전송메시지.주소.파라미터[1].key = text
+  전송메시지.주소.파라미터[1].val = 문장.미세먼지알림문장
+}
+타이머::KECO.미세먼지알림타이머
+{
+  전송메시지.이벤트명 = 미세먼지알림틱
+  전송메시지.시간 = 3600000
+}
+문장::KECO.KECO미세먼지요약문장
+{$$$세션.keco_target_name$$$ 대기질: $$$세션.keco_grade_text$$$ (통합지수 $$$세션.keco_khai_value$$$, 미세먼지 PM10 $$$세션.keco_pm10_value$$$㎍/㎥, PM2.5 $$$세션.keco_pm25_value$$$㎍/㎥) - $$$세션.keco_datatime$$$ 기준}
+문장::KECO.KECO감시알림라인문장
+{$$$세션.keco_target_name$$$ $$$세션.keco_grade_text$$$ (통합지수 $$$세션.keco_khai_value$$$)}
+문장::TELEGRAM.미세먼지알림문장
+{[미세먼지 알림] 통합대기환경지수 나쁨 이상인 관심지역이 있습니다.
+$$$세션.keco_watch_alert_text$$$}
+문장::TELEGRAM.KECO지역미지원문장
+{"$$$세션.keco_target_name$$$"은(는) 아직 지원하지 않는 지역입니다. 지원 지역: 서울, 부산, 대구, 인천, 광주, 대전, 울산, 세종, 경기, 강원, 충북, 충남, 전북, 전남, 경북, 경남, 제주}
+문장::TELEGRAM.KECO측정소없음문장
+{$$$세션.keco_target_name$$$ 지역의 측정소 데이터를 찾을 수 없습니다.}
+문장::TELEGRAM.KECO지역추가완료문장
+{$$$세션.keco_target_name$$$을(를) 관심지역에 추가했습니다. 매일 $$$설정.KECO.alert_hour$$$시경 통합대기환경지수 나쁨 이상 시 알려드립니다.}
+문장::TELEGRAM.KECO지역삭제완료문장
+{$$$세션.keco_target_name$$$을(를) 관심지역에서 삭제했습니다.}
+문장::TELEGRAM.KECO지역삭제실패문장
+{$$$세션.keco_target_name$$$은(는) 등록된 관심지역이 아닙니다.}
+문장::TELEGRAM.KECO지역조회빈목록문장
+{등록된 관심지역이 없습니다. "미세먼지 지역 추가 서울"처럼 말씀해주세요.}
+문장::TELEGRAM.KECO지역추가한도초과문장
+{이미 관심지역이 5개 등록되어 있어 더 추가할 수 없습니다. 기존 지역을 삭제한 후 다시 시도해주세요.}

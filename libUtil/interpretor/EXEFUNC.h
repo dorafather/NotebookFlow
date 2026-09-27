@@ -83,6 +83,9 @@ class ExeFunc
 		static bool EXE_WORDSUM( QTHREAD & _wk,
 						POOL::POOLDATA & _rPool, RestMsg & _req,
 						ALIST & _params);
+		static bool EXE_SETINI( QTHREAD & _wk,
+						POOL::POOLDATA & _rPool, RestMsg & _req,
+						ALIST & _params);
 		static void copyParam(ALIST & _dst, RestParam & _src);
 		static KCSTR paramone(KSTRING & _value,
 						POOL::POOLDATA & _rPool,

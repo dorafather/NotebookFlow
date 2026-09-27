@@ -51,6 +51,16 @@ KCSTR IniFileReader::GET(KCSTR _cate, KCSTR _key, KSTRING & _buf)
 	m_lock.UNLOCK();
 	return (KCSTR)_buf;
 }
+void IniFileReader::SET(KCSTR _cate, KCSTR _key, KCSTR _val)
+{
+	m_lock.WLOCK();
+	m_parser.setline(_cate, _key,_val);
+	KSTRING buf;
+	m_parser.STR(buf);
+	if(buf.LENGTH()>0)
+	m_file.writefile((KCSTR)buf,buf.LENGTH());
+	m_lock.UNLOCK();
+}
 void IniFileReader::inifiletimeout(Gpolling::info * _info)
 {
 	IniFileReader * pFile = (IniFileReader*)(_info->m_pOwner);

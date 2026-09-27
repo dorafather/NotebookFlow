@@ -78,7 +78,21 @@ KCSTR ExeParam::PARAM(KSTRING & _val1, KSTRING & _val2,
 		{
 			return (KCSTR)_rPool.GET(DEF_DSL_K_LOOP_CNT_eng).VAL();
 		}
+		// claude-code 2026-09-27 (dorafather 승인): 댕글링 포인터 수정.
+		// _val1은 ExeFunc::paramone()이 자기 스택에 만든 지역 BasicParser
+		// pm의 내부 버퍼를 가리킨다 - paramone()이 리턴하면 pm은 죽으므로
+		// 이 포인터를 그대로 돌려주면 댕글링이다. 같은 함수 호출 안에서
+		// paramone()을 여러 번 부르면(예: 함수.설정저장의 인자 3개) 다음
+		// 호출의 pm이 같은 스택 주소를 재사용해 앞서 받은 포인터 내용을
+		// 덮어써 값이 손상된다(실측 재현 - CLAUDE.md 1.19절 참고). 이 함수의
+		// 다른 모든 분기가 이미 하듯 호출자 소유 _buf로 복사해 반환하면
+		// 호출자가 살아있는 동안은 항상 안전하다.
+#if 1
+		_buf = _val1;
+		return (KCSTR)_buf;
+#else
 		return (KCSTR)_val1;
+#endif
 	}
 	else
 	{

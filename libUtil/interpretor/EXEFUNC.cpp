@@ -31,6 +31,7 @@ ExeEntry g_ExeTable[EXE_TYPE_MAX] =
     { EXE_TYPE_SPLIT,      &ExeFunc::EXE_SPLIT      },
     { EXE_TYPE_WORDEX,      &ExeFunc::EXE_WORDEX      },
     { EXE_TYPE_WORDSUM,      &ExeFunc::EXE_WORDSUM      },
+    { EXE_TYPE_SET_INI,      &ExeFunc::EXE_SETINI      },
 };
 KCSTR str_insert(KSTRING & _src,KCSTR _insert, size_t _pos)
 {
@@ -601,6 +602,23 @@ bool ExeFunc::EXE_WORDSUM( QTHREAD & _wk,
 			}
 		}
 	}
+	return true;
+}
+bool ExeFunc::EXE_SETINI( QTHREAD & _wk,
+						POOL::POOLDATA & _rPool, RestMsg & _req,
+						ALIST & _params)
+{
+	if(_params.NUMS() != 3)
+	{
+		return false;
+	}
+	KSTRING src0;
+	KCSTR szSrc0 = paramone(_params[0].VAL(), _rPool,_req,src0);
+	KSTRING src1;
+	KCSTR szSrc1 = paramone(_params[1].VAL(), _rPool,_req,src1);
+	KSTRING src2;
+	KCSTR szSrc2 = paramone(_params[2].VAL(), _rPool,_req,src2);
+	ExeCore::OBJ().SETINI(szSrc0, szSrc1, szSrc2);
 	return true;
 }
 }

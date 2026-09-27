@@ -17,6 +17,7 @@ class IniFileReader
 		void JSON(RestMsg & _msg);
 		void STR(KSTRING & _buf);
 		KCSTR GET(KCSTR _cate, KCSTR _key, KSTRING & _buf);
+		void SET(KCSTR _cate, KCSTR _key, KCSTR _val);
 		static void inifiletimeout(Gpolling::info * _info);
 		FileReader m_file;
 		IniParser m_parser;

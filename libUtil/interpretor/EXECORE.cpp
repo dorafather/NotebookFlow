@@ -98,6 +98,10 @@ KCSTR ExeCore::GETINI(KCSTR _category, KCSTR _key, KSTRING & _ret)
 {
 	return m_ini.GET(_category,_key,_ret);
 }
+void ExeCore::SETINI(KCSTR _category, KCSTR _key, KCSTR _val)
+{
+	m_ini.SET(_category,_key,_val);
+}
 bool ExeCore::isMatchDomain(KCSTR _namespace, RestMsg & _req)
 {
 	RestParam & addr = _req.GET(DEF_DSL_K_ADDR_kor);

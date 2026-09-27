@@ -174,7 +174,20 @@ bool CxIfParser::m_fnE_PARSE_COND(const char _cInput)
 bool CxIfParser::m_fnE_PARSE_COND_SP(const char _cInput)
 {
 	unsigned char uc = (unsigned char)_cInput;
+	// claude-code 2026-09-27 (dorafather 승인): 한글 "또는"(OR)이 다중조건
+	// 구분자로 전혀 인식되지 않던 버그 수정. "또는"의 UTF-8 첫 바이트는
+	// 0xEB인데 원래 코드는 0xEC(어느 한글 단어에도 해당하지 않는 값)를
+	// 검사하고 있었다 - "그리고"(0xEA)만 걸리고 "또는"은 이 목록 어디에도
+	// 없어, 만약에(A) 또는(B)를 쓰면 그 즉시 파싱이 실패하며 그 지점부터
+	// 파일 끝까지 처리::/전송:: 등록이 절반 가까이 누락되는 심각한 사고로
+	// 이어졌다(rest.sce 실측 재현 - KRX/KMA/KECO 관심목록 addr.ini 영구
+	// 저장 기능 검증 중 발견, CLAUDE.md 1.19절 참고). 실제 값(0xEB)으로
+	// 교체.
+#if 1
+	if(uc == 0xEB || uc == 0xEA || uc == 'O' || uc == 'A')
+#else
 	if(uc == 0xEC || uc == 0xEA || uc == 'O' || uc == 'A')
+#endif
 	{
 		m_curIf = new  IfParser;
 		if(!m_curIf->parsestep(_cInput))
