@@ -79,9 +79,15 @@ Slack·Discord·ntfy·Bluesky로 알림을 보내고, 원격 서버(SSH)에 명�
    보내보세요. 지금 쓸 수 있는 명령어 목록이 돌아오면 준비 완료입니다.
 
 <p align="center">
-  <img src="assets/telegram_welcome.png" width="420" alt="실제 Telegram 환영 메시지와 help 명령어 안내"/>
+  <img src="assets/telegram_welcome.jpg" width="420" alt="실제 Telegram 환영 메시지"/>
   <br/>
-  <sub>NotebookFlow 실행 시 자동으로 오는 환영 메시지와 <code>help</code> 명령어 안내 화면(실제 캡처)</sub>
+  <sub>NotebookFlow 실행 시 자동으로 오는 환영 메시지(실제 캡처)</sub>
+</p>
+
+<p align="center">
+  <img src="assets/telegram_help.jpg" width="420" alt="실제 Telegram help 명령어 안내"/>
+  <br/>
+  <sub><code>help</code> 명령어 안내 화면 — 주식/기상청/미세먼지 등 최신 명령어 전부 포함(실제 캡처, v1.6.0 기준)</sub>
 </p>
 4. 웹 연동 관리 화면(`frontend/`, 기본 포트는 `addr.ini`의 `[FLOW]`
    섹션 참고)에서 나머지 서비스(Slack, Discord, GitHub, SSH 대상
