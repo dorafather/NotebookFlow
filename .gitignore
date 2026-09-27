@@ -15,6 +15,15 @@ addr.ini
 NotebookFlow/agent_flow_sessions.json
 agent_flow_sessions.json
 
+# 2026-09-26: NotebookFlow/ 폴더 안의 CLAUDE.md는 이 dev 트리에서만 쓰는
+# "설치 레이아웃 미러" 복사본이다 - agent-flow의 cwd가 이 폴더(정션 경유)로
+# 고정돼 있어, 루트 CLAUDE.md(진짜 소스)를 여기 복사해 두지 않으면 로컬
+# "클루드코드"/"업데이트" 에이전트 호출이 프로젝트 문서를 전혀 못 읽는다
+# (실제 설치판은 bin/notebookflow/에 나란히 놓여 이 문제가 없음). 루트
+# CLAUDE.md를 고칠 때마다 수동으로 다시 복사해야 하는 파생 파일이라 커밋
+# 대상이 아니다.
+NotebookFlow/CLAUDE.md
+
 # addr.ini 리팩터링 이전에 쓰이던 죽은 설정 파일들 - Main.cpp가 더 이상 로드하지
 # 않는데도(addr.ini만 로드) 실제 Telegram/Discord/Slack/GitHub/Notion 자격증명이
 # 하드코딩된 채 남아있음. 삭제는 이번 티켓 범위 밖이라 커밋 제외만 처리.
