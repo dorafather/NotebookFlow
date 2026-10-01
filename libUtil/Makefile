@@ -1,7 +1,20 @@
 CROSS_BUILD=false
 CROSS_TARGET=aarch64-linux-gnu
 
-ifeq ($(CROSS_BUILD),true)
+# ANDROID_BUILD=true로 NDK(aarch64-linux-android) 타겟으로 빌드합니다.
+# 필요시 `make ANDROID_BUILD=true ANDROID_NDK=... ANDROID_API=...`로 오버라이드하세요.
+ANDROID_BUILD=false
+ANDROID_NDK=/c/Microsoft/AndroidNDK/android-ndk-r23c
+ANDROID_API=24
+ANDROID_ARCH=aarch64-linux-android
+
+ifeq ($(ANDROID_BUILD),true)
+NDK_BIN=$(ANDROID_NDK)/toolchains/llvm/prebuilt/windows-x86_64/bin
+CXX=$(NDK_BIN)/$(ANDROID_ARCH)$(ANDROID_API)-clang++
+AR=$(NDK_BIN)/llvm-ar
+RANLIB=$(NDK_BIN)/llvm-ranlib
+ARCH_FLAGS=
+else ifeq ($(CROSS_BUILD),true)
 CXX=$(CROSS_TARGET)-g++
 AR=$(CROSS_TARGET)-ar
 RANLIB=$(CROSS_TARGET)-ranlib
@@ -13,7 +26,15 @@ endif
 DEFLIST		= -Wall -Wno-deprecated -g -DDEBUG -D_REENTRANT $(ARCH_FLAGS) -fPIC
 DEFLIST      += -DUNIX -D_LINUX_ -DLINUX
 DEFLIST      += -std=c++11
+
+# bionic(Android libc)는 pthread/rt/resolv/nsl을 libc 자체에 이미 포함하고
+# 있어 별도 -l 링크 대상이 없고, 이 라이브러리는 curl을 실제로 쓰지 않습니다
+# (COMMONLIB의 -lcurl은 과거 템플릿에서 넘어온 미사용 항목).
+ifeq ($(ANDROID_BUILD),true)
+COMMONLIB	= -lm -ldl -lstdc++ -lz
+else
 COMMONLIB	= -lm -ldl -lresolv -lnsl -lstdc++ -lrt -lpthread -lz -lcurl
+endif
 
 DEF	= $(WARN) $(DEBUG) $(DEFLIST) 
 INC	= -I/usr/local/include

@@ -16,7 +16,12 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <sys/stat.h>
+#ifndef __ANDROID__
+// bionic(Android libc)엔 레거시 BSD 헤더인 sys/timeb.h가 없음 - 이 파일
+// 안에서 그 헤더의 심볼(ftime/struct timeb)을 실제로 쓰지 않아 안전하게
+// 제외 가능 (2026-10-01, Android NDK 포팅 중 확인).
 #include <sys/timeb.h>
+#endif
 #include <sys/types.h>
 
 namespace nsUtil

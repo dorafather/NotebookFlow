@@ -1,4 +1,5 @@
 #include "FUNCPARSER.h"
+#include "EXEFUNC.h"
 namespace nsUtil
 {
  SceParserInfoTbl_t g_SceParserFuncInfo[EXE_TYPE_MAX]=
@@ -33,6 +34,9 @@ namespace nsUtil
 	{
 		if(g_SceParserFuncInfo[i].m_pfn(_name)) return true;
 	}
+	#ifdef DEF_DSL_ENABLE_USER_FUNCTION
+	if(ExeFunc::findUserFunc(_name)) return true;
+	#endif
 	return false;
 }
  eExeType FuncParser::getfunctype(KCSTR _name)

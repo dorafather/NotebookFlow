@@ -279,8 +279,17 @@ bool StateParser::m_fnE_PARSE_CLASS_SP(const char _cInput)
 	{
 		if(!IS_DSL_CLASS_PROC(m_curr->m_class))
 		{
+#if 1
+			// 2026-10-01 수정: KSTRING 객체를 가변인자(...)에 그대로 넘기면
+			// 표준상 미정의 동작(UB) - x86-64/GCC에선 우연히 안 터졌으나
+			// Android NDK clang이 -Wnon-pod-varargs로 잡아냄. .VAL()로 C
+			// 문자열을 꺼내 넘기도록 수정.
+			m_result.PRINT("state() Illegal PROC keyword %s",(KCSTR)m_oName,
+													(KCSTR)m_tmpProc);
+#else
 			m_result.PRINT("state() Illegal PROC keyword %s",m_oName,
 													m_tmpProc);
+#endif
 			return false;
 		}
 		m_curr->m_proc<<_cInput;

@@ -87,7 +87,8 @@ bool ExeScen::PARSE()
 			m_listProc.pushback(pProc);
 		}
 		else if(IS_DSL_CLASS_ACT_SEND((KCSTR)classObj.m_oType)
-			|| IS_DSL_CLASS_ACT_TIMER((KCSTR)classObj.m_oType) )
+			|| IS_DSL_CLASS_ACT_TIMER((KCSTR)classObj.m_oType) 
+			|| IS_DSL_CLASS_ACT_CRON((KCSTR)classObj.m_oType) )
 		{
 			ActionParser * pAct = new ActionParser;
 			if(!pAct->PARSE(classObj))

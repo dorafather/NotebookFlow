@@ -41,6 +41,7 @@ typedef struct SceParserInfoTbl_t
 #define DEF_DSL_K_ACTION_EVENT_kor "이벤트명"
 #define DEF_DSL_K_DOMAIN_kor "도메인"
 #define DEF_DSL_K_RSP_CODE_kor "응답코드"
+#define DEF_DSL_K_CRON_EXP_kor "크론표현식"
 
 #define DEF_DSL_K_SCE_eng "SCE"
 #define DEF_DSL_K_INIT_eng "INIT"
@@ -66,6 +67,7 @@ typedef struct SceParserInfoTbl_t
 #define DEF_DSL_K_ACTION_EVENT_eng "ACTION_EVENT"
 #define DEF_DSL_K_DOMAIN_eng "DOMAIN"
 #define DEF_DSL_K_RSP_CODE_eng "RSP_CODE"
+#define DEF_DSL_K_CRON_EXP_eng "CRON_EXP"
 
 inline bool IS_DSL_K_SCE(KCSTR _cmp){COMPSTR cmp;cmp=_cmp;if(cmp==DEF_DSL_K_SCE_eng||cmp==DEF_DSL_K_SCE_kor)return true;else return false;}
 inline bool IS_DSL_K_INIT(KCSTR _cmp){COMPSTR cmp;cmp=_cmp;if(cmp==DEF_DSL_K_INIT_eng||cmp==DEF_DSL_K_INIT_kor)return true;else return false;}
@@ -91,6 +93,7 @@ inline bool IS_DSL_K_METHOD(KCSTR _cmp){COMPSTR cmp;cmp=_cmp;if(cmp==DEF_DSL_K_M
 inline bool IS_DSL_K_ACTION_EVENT(KCSTR _cmp){COMPSTR cmp;cmp=_cmp;if(cmp==DEF_DSL_K_ACTION_EVENT_eng||cmp==DEF_DSL_K_ACTION_EVENT_kor)return true;else return false;}
 inline bool IS_DSL_K_DOMAIN(KCSTR _cmp){COMPSTR cmp;cmp=_cmp;if(cmp==DEF_DSL_K_DOMAIN_eng||cmp==DEF_DSL_K_DOMAIN_kor)return true;else return false;}
 inline bool IS_DSL_K_RSP_CODE(KCSTR _cmp){COMPSTR cmp;cmp=_cmp;if(cmp==DEF_DSL_K_RSP_CODE_eng||cmp==DEF_DSL_K_RSP_CODE_kor)return true;else return false;}
+inline bool IS_DSL_K_CRON_EXP(KCSTR _cmp){COMPSTR cmp;cmp=_cmp;if(cmp==DEF_DSL_K_CRON_EXP_eng||cmp==DEF_DSL_K_CRON_EXP_kor)return true;else return false;}
 
 inline KCSTR STR_DSL_K_SCE(KCSTR _lang){COMPSTR cmp(_lang);if(cmp=="eng")return DEF_DSL_K_SCE_eng;else return DEF_DSL_K_SCE_kor;}
 inline KCSTR STR_DSL_K_INIT(KCSTR _lang){COMPSTR cmp(_lang);if(cmp=="eng")return DEF_DSL_K_INIT_eng;else return DEF_DSL_K_INIT_kor;}
@@ -116,6 +119,7 @@ inline KCSTR STR_DSL_K_METHOD(KCSTR _lang){COMPSTR cmp(_lang);if(cmp=="eng")retu
 inline KCSTR STR_DSL_K_ACTION_EVENT(KCSTR _lang){COMPSTR cmp(_lang);if(cmp=="eng")return DEF_DSL_K_ACTION_EVENT_eng;else return DEF_DSL_K_ACTION_EVENT_kor;}
 inline KCSTR STR_DSL_K_DOMAIN(KCSTR _lang){COMPSTR cmp(_lang);if(cmp=="eng")return DEF_DSL_K_DOMAIN_eng;else return DEF_DSL_K_DOMAIN_kor;}
 inline KCSTR STR_DSL_K_RSP_CODE(KCSTR _lang){COMPSTR cmp(_lang);if(cmp=="eng")return DEF_DSL_K_RSP_CODE_eng;else return DEF_DSL_K_RSP_CODE_kor;}
+inline KCSTR STR_DSL_K_CRON_EXP(KCSTR _lang){COMPSTR cmp(_lang);if(cmp=="eng")return DEF_DSL_K_CRON_EXP_eng;else return DEF_DSL_K_CRON_EXP_kor;}
 
 class BasicParser : public StlObject
 {

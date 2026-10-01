@@ -207,6 +207,69 @@ bool ExeAction::EXE_TIMER(QTHREAD & _wk,
 	_wk.SETTIMER(arg);
 	return true;
 }
+bool ExeAction::EXE_CRON(QTHREAD & _wk,
+					POOL::POOLDATA & _rPool,
+					RestMsg & _req)
+{
+	ActionParser & actP = *m_dsl;
+	ARG arg;
+	arg.SET(API_P_TIMER_TYPE).VAL() = "SCE_TIMER_CRON";
+	arg.SET(DEF_SCE_ID).VAL() = _rPool.GET(DEF_SCE_ID).VAL();
+	arg.SET("UNIQ_ID").VAL() = _rPool.GET("UNIQ_ID").VAL();
+	arg.SET(API_P_TIME).VAL() = 60000;
+	if(_rPool.GET(DEF_SCE_ID).VAL() != "NonProto")
+	{
+		arg.SET(DEF_AS_ID).VAL() = _rPool.GET(DEF_AS_ID).VAL();
+		arg.SET(API_P_POOL_UNIQ).VAL() = _rPool.GET(API_P_POOL_UNIQ).VAL();
+	}
+	RestMsg msg;
+	KSTRING domain_name = actP.m_oSpace;
+	RestParam & addr = msg.SET(DEF_DSL_K_ADDR_kor);
+	KSTRING & domain_addr = addr.SET(DEF_DSL_K_DOMAIN_kor).VAL();
+	ExeCore::OBJ().GETINI((KCSTR)domain_name,"domain",domain_addr);
+	if(_rPool.GET(DEF_SCE_ID).VAL() == "NonProto")
+	{
+		msg.SET(DEF_SCE_ID).VAL() = (KCSTR)_rPool.GET(DEF_SCE_ID).VAL();
+	}
+	else
+	{
+		msg.SET(DEF_SCE_EVENT).VAL() = DEF_SCE_ACTION;
+		msg.SET(DEF_SCE_ID).VAL() = (KCSTR)_rPool.GET(DEF_SCE_ID).VAL();
+		msg.SET(DEF_AS_ID).VAL() = (KCSTR)_rPool.GET(DEF_AS_ID).VAL();
+	}
+	for(KUINT i=0;i<actP.NUMS();i++)
+	{
+		AssignParser & line = actP[i];
+		KSTRING & a = line.m_AB.KEY();
+		KSTRING & b = line.m_AB.VAL();
+		KSTRING & c = line.m_CD.KEY();
+		KSTRING & d = line.m_CD.VAL();
+		if(IS_DSL_K_SND_MSG((KCSTR)a))
+		{
+			if(IS_DSL_K_TYPE((KCSTR)b))
+			{
+				msg.SET(DEF_ACTION_EVENT).VAL() = c;
+			}
+			else if(IS_DSL_K_CRON_EXP((KCSTR)b))
+			{
+				KSTRING lval;
+				KCSTR val = ExeParam::PARAM(c, d, _rPool,_req, lval);
+				msg.SET("CRON_EXP").VAL() = val;
+				arg.SET("CRON_EXP").VAL()= val;
+			}
+			else
+			{
+				KSTRING &val = (KSTRING &)msg.SETR(b).VAL();
+				KSTRING lval;
+				val = ExeParam::PARAM(c, d, _rPool,_req, lval);
+			}
+		}
+	}
+	KSTRING & pk = arg.SET(API_P_PACKET).VAL();
+	pk = msg.STR();
+	_wk.SETTIMER(arg);
+	return true;
+}
 bool ExeAction::EXE(QTHREAD & _wk,
 					POOL::POOLDATA & _rPool,
 					RestMsg & _req)
@@ -218,6 +281,10 @@ bool ExeAction::EXE(QTHREAD & _wk,
 	else if(IS_DSL_CLASS_ACT_TIMER((KCSTR)m_dsl->m_oType))
 	{
 		return EXE_TIMER(_wk,_rPool,_req);
+	}
+	else if(IS_DSL_CLASS_ACT_CRON((KCSTR)m_dsl->m_oType))
+	{
+		return EXE_CRON(_wk,_rPool,_req);
 	}
 	return false;
 }

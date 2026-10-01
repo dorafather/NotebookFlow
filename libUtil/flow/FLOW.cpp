@@ -1,5 +1,6 @@
 #include "FLOW.h"
 #include "DTIME.h"
+#include "CRON.h"
 
 namespace nsUtil
 {
@@ -245,6 +246,94 @@ void Flow::procTimeOut(QTHREAD & _wk, ARG & _arg, RestMsg & _rcvMsg)
 		{
 			termSession(_wk, *pPool,"normal");
 			_wk.FREE_((KCSTR)szKey);
+		}
+	}
+	else if(_arg.GET(API_P_TIMER_TYPE).VAL() == "SCE_TIMER_CRON")
+	{
+		szKey = (KSTR)_rcvMsg.GET(DEF_SCE_ID).VAL();
+		_rcvMsg.SET(DEF_SCE_EVENT).VAL() = DEF_SCE_ACTION;
+		ARG argT; argT = _arg;
+		KSTRING & cron = _arg.GET("CRON_EXP").VAL();
+		TIME nTime;
+		if(szKey == "NonProto")
+		{
+			ExeCore::Session * pSes = (ExeCore::Session*)m_gPool.GETU();
+			if(pSes==NULL)
+			{
+				return;
+			}
+			if(ExeCore::OBJ().m_bParse==false)
+			{
+				return;
+			}
+			if(m_gPool.GET("UNIQ_ID").VAL() != (KCSTR)_arg.GET("UNIQ_ID").VAL())
+			{
+				Logging("TimeOut Mismatch Id %s, %s",(KCSTR)m_gPool.GET("UNIQ_ID").VAL(),
+											(KCSTR)_arg.GET("UNIQ_ID").VAL());
+				return;
+			}
+			_wk.SETTIMER(argT);
+			if(!CheckSched::isMatch((KCSTR)cron,nTime))
+			{
+				Logging("Not Match Cron : %s",(KCSTR)cron);
+				return;
+			}
+			ExeCore::OBJ().EXE(_wk, m_gPool,_rcvMsg);
+			if( IS_DSL_K_STOP((KCSTR)m_gPool.GET(DEF_DSL_K_STATE_eng).VAL()))
+			{
+				m_gPool.CLEAR();
+			}
+		}
+		else
+		{
+			POOL::POOLDATA * pPool = NULL;
+			if(KSTRING::m_fnStrnCmp((KCSTR)szKey,"IC", 2)==0)
+			{
+				pPool = _wk.GET_((KCSTR)szKey);
+			}
+			else
+			{
+				pPool = _wk.GET_((KCSTR)szKey);
+			}
+			if(pPool==NULL)
+			{
+				return;
+			}
+			ExeCore::Session * pSes = (ExeCore::Session*)pPool->GETU();
+			if(pSes==NULL) 
+			{
+				return;
+			}
+			if(pPool->GET(API_P_POOL_UNIQ).VAL() != 
+						(KCSTR)_arg.GET(API_P_POOL_UNIQ).VAL())
+			{
+				return;
+			}
+			_wk.SETTIMER(argT);
+			if(!CheckSched::isMatch((KCSTR)cron,nTime))
+			{
+				Logging("Not Match Cron : %s",(KCSTR)cron);
+				return;
+			}
+			ExeCore::OBJ().EXE(_wk, *pPool,_rcvMsg);
+			if(IS_DSL_K_STOP((KCSTR)pPool->GET(DEF_DSL_K_STATE_eng).VAL() ))
+			{
+				RestMsg rspMsg;
+				rspMsg.SET(DEF_SCE_EVENT).VAL() = DEF_SCE_STOP_REQ;
+				rspMsg.SET(DEF_SCE_ID).VAL() = (KCSTR)szKey;
+				rspMsg.SET(DEF_AS_ID).VAL() = (KCSTR)_rcvMsg.SET(DEF_AS_ID).VAL();
+				rspMsg.SET(DEF_DSL_K_ADDR_eng).VAL() = pPool->GET(DEF_DSL_K_ADDR_eng).VAL(); 
+				rspMsg.SET("RESULT").VAL() = "0";
+				rspMsg.SET("REASON").VAL() = "Success";
+				if(srcAppHdr.NUMS()>0)
+				{
+					RestParam & dstAppHdr = rspMsg.SET("app-hdr");
+					dstAppHdr = srcAppHdr;
+				}
+				printMsg(true,(KCSTR)rspMsg.STR());
+				ACTION(_wk,*pPool,rspMsg);
+				termTimer(_wk,*pPool, (KCSTR)szKey);
+			}
 		}
 	}
 }

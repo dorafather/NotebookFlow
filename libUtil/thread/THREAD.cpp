@@ -181,10 +181,18 @@ int BaseThread::m_fnSetCore(int _nCoreID)
 	int num_cores = sysconf(_SC_NPROCESSORS_ONLN);   
 	if (_nCoreID >= num_cores)  
 	return EINVAL;                                                                                    	
-	cpu_set_t cpuset;                                                                                    
-	CPU_ZERO(&cpuset);                                                                                   	
+	cpu_set_t cpuset;
+	CPU_ZERO(&cpuset);
 	CPU_SET(_nCoreID, &cpuset);
+#if defined(__ANDROID__)
+	// bionic(Android libc)엔 glibc 전용 래퍼인 pthread_setaffinity_np()가 없음.
+	// bionic의 pthread_t는 커널 tid와 동일한 값으로 구현되어 있어(공식 문서화된
+	// 전제는 아니지만 NDK 생태계에서 널리 쓰이는 전제), sched_setaffinity()에
+	// pid_t로 그대로 넘겨도 안전하게 동작함 (2026-10-01, Android NDK 포팅).
+	return sched_setaffinity((pid_t)m_threadId, sizeof(cpu_set_t), &cpuset);
+#else
 	return pthread_setaffinity_np(m_threadId, sizeof(cpu_set_t), &cpuset);
+#endif
 }
 THREAD::THREAD()
 {

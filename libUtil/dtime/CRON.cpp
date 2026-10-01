@@ -165,54 +165,61 @@ bool CheckSched::isMatch_(KCSTR _cron,
                   unsigned int _year, unsigned int _mon, unsigned int _day,
                   unsigned int _hour, unsigned int _mins)
 {
-	std::string cron; cron = _cron;
-	std::vector<std::string> fields;
-	std::stringstream ss(cron);
-	std::string field;
-	while (ss >> field) 
-	{
-		fields.push_back(field);
-	}
-	if (fields.size() != 5) return false;
-	std::set<int> minutes  = parseField(fields[0],  0, 59);
-	std::set<int> hours    = parseField(fields[1],  0, 23);
-	std::set<int> days     = parseField(fields[2],  1, 31);
-	std::set<int> months   = parseField(fields[3],  1, 12);
-	std::set<int> weekdays = parseField(fields[4],  0, 6);
-	if (minutes.empty() || hours.empty() || days.empty() ||
-	months.empty() || weekdays.empty()) 
-	{
-		return false;
-	}
-	if (minutes.count(_mins) == 0)  return false;
-	if (hours.count(_hour) == 0)    return false;
-	if (months.count(_mon) == 0)    return false;
-	bool dayIsWildcard = (fields[2] == "*");
-	bool weekdayIsWildcard = (fields[4] == "*");
-	int wday = getDayOfWeek(_year, _mon, _day);
-	bool dayMatch = days.count(_day) > 0;
-	bool weekdayMatch = weekdays.count(wday) > 0;
-	if (dayIsWildcard && weekdayIsWildcard) 
-	{
-		return true;  
-	}
-	else if (!dayIsWildcard && !weekdayIsWildcard) 
-	{
-		return dayMatch || weekdayMatch;  
-	}
-	else 
-	{
-		return dayMatch && weekdayMatch; 
-	}
+    std::string cron = _cron;
+    std::vector<std::string> fields;
+    std::stringstream ss(cron);
+    std::string field;
+    while (ss >> field) {
+        fields.push_back(field);
+    }
+    if (fields.size() != 5) return false;
+
+    std::set<int> minutes  = parseField(fields[0],  0, 59);
+    std::set<int> hours    = parseField(fields[1],  0, 23);
+    std::set<int> days     = parseField(fields[2],  1, 31);
+    std::set<int> months   = parseField(fields[3],  1, 12);
+    std::set<int> weekdays = parseField(fields[4],  0, 6);
+
+ 
+    if (minutes.empty() || hours.empty() || days.empty() ||
+        months.empty() || weekdays.empty()) {
+        return false;
+    }
+
+    if (minutes.count(_mins) == 0)  return false;
+    if (hours.count(_hour) == 0)    return false;
+    if (months.count(_mon) == 0)    return false;
+
+    bool dayIsWildcard     = (days.size()     == 31);   // 1~31
+    bool weekdayIsWildcard = (weekdays.size() == 7);    // 0~6
+
+    int wday = getDayOfWeek(_year, _mon, _day);
+    bool dayMatch     = days.count(_day) > 0;
+    bool weekdayMatch = weekdays.count(wday) > 0;
+
+    
+    if (dayIsWildcard && weekdayIsWildcard) {
+    
+        return true;
+    }
+    else if (!dayIsWildcard && !weekdayIsWildcard) {
+    
+        return dayMatch || weekdayMatch;
+    }
+    else {
+       
+        return dayMatch && weekdayMatch;
+    }
 }
+
 bool CheckSched::isMatch(KCSTR _cron, TIME & _time)
 {
-	return isMatch_(_cron,
-					_time.Year(),
-					_time.Mon(),
-					_time.Day(),
-					_time.Hour(),
-					_time.Min());
+    return isMatch_(_cron,
+                    _time.Year(),
+                    _time.Mon(),
+                    _time.Day(),
+                    _time.Hour(),
+                    _time.Min());
 }
 void CheckSched::checkCronTest()
 {

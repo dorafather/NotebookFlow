@@ -79,7 +79,8 @@ bool ExeProc::EXE(QTHREAD & _wk,
 				KSTRING & procType = procexe.m_exe.KEY();
 				KSTRING & procName = procexe.m_exe.VAL();
 				if(IS_DSL_CLASS_ACT_SEND((KCSTR)procType) ||
-				IS_DSL_CLASS_ACT_TIMER((KCSTR)procType))
+				IS_DSL_CLASS_ACT_TIMER((KCSTR)procType) ||
+				IS_DSL_CLASS_ACT_CRON((KCSTR)procType))
 				{
 					ActionParser * pFindAct = ExeCore::OBJ().FINDACTION(_rPool,(KCSTR)procName);
 					if(pFindAct)

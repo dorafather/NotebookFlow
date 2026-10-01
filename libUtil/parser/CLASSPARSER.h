@@ -17,6 +17,7 @@ typedef struct SceParserClassInfoTbl_t
 #define DEF_DSL_CLASS_PROC_kor "처리"
 #define DEF_DSL_CLASS_ACT_SEND_kor "전송"
 #define DEF_DSL_CLASS_ACT_TIMER_kor "타이머"
+#define DEF_DSL_CLASS_ACT_CRON_kor "크론"
 #define DEF_DSL_CLASS_STMT_kor "문장"
 #define DEF_DSL_CLASS_INI_kor "설정"
 #define DEF_DSL_CLASS_SCE_eng "SCE"
@@ -24,6 +25,7 @@ typedef struct SceParserClassInfoTbl_t
 #define DEF_DSL_CLASS_PROC_eng "PROC"
 #define DEF_DSL_CLASS_ACT_SEND_eng "ACT_SEND"
 #define DEF_DSL_CLASS_ACT_TIMER_eng "ACT_TIMER"
+#define DEF_DSL_CLASS_ACT_CRON_eng "ACT_CRON"
 #define DEF_DSL_CLASS_STMT_eng "STMT"
 #define DEF_DSL_CLASS_INI_eng "INI"
 typedef enum
@@ -35,6 +37,7 @@ typedef enum
 	E_DSL_CLASS_ACT_TIMER,
 	E_DSL_CLASS_STMT,
 	E_DSL_CLASS_INI,
+	E_DSL_CLASS_ACT_CRON,
 	E_DSL_CLASS_MAX,
 }ESceParserClass_t;
 inline bool IS_DSL_CLASS_SCE(KCSTR _cmp){COMPSTR cmp;cmp=_cmp;if(cmp==DEF_DSL_CLASS_SCE_eng||cmp==DEF_DSL_CLASS_SCE_kor)return true;else return false;}
@@ -42,6 +45,7 @@ inline bool IS_DSL_CLASS_STATE(KCSTR _cmp){COMPSTR cmp;cmp=_cmp;if(cmp==DEF_DSL_
 inline bool IS_DSL_CLASS_PROC(KCSTR _cmp){COMPSTR cmp;cmp=_cmp;if(cmp==DEF_DSL_CLASS_PROC_eng||cmp==DEF_DSL_CLASS_PROC_kor)return true;else return false;}
 inline bool IS_DSL_CLASS_ACT_SEND(KCSTR _cmp){COMPSTR cmp;cmp=_cmp;if(cmp==DEF_DSL_CLASS_ACT_SEND_eng||cmp==DEF_DSL_CLASS_ACT_SEND_kor)return true;else return false;}
 inline bool IS_DSL_CLASS_ACT_TIMER(KCSTR _cmp){COMPSTR cmp;cmp=_cmp;if(cmp==DEF_DSL_CLASS_ACT_TIMER_eng||cmp==DEF_DSL_CLASS_ACT_TIMER_kor)return true;else return false;}
+inline bool IS_DSL_CLASS_ACT_CRON(KCSTR _cmp){COMPSTR cmp;cmp=_cmp;if(cmp==DEF_DSL_CLASS_ACT_CRON_eng||cmp==DEF_DSL_CLASS_ACT_CRON_kor)return true;else return false;}
 inline bool IS_DSL_CLASS_STMT(KCSTR _cmp){COMPSTR cmp;cmp=_cmp;if(cmp==DEF_DSL_CLASS_STMT_eng||cmp==DEF_DSL_CLASS_STMT_kor)return true;else return false;}
 inline bool IS_DSL_CLASS_INI(KCSTR _cmp){COMPSTR cmp;cmp=_cmp;if(cmp==DEF_DSL_CLASS_INI_eng||cmp==DEF_DSL_CLASS_INI_kor)return true;else return false;}
 
@@ -50,6 +54,7 @@ inline KCSTR STR_DSL_CLASS_STATE(KCSTR _lang){COMPSTR cmp(_lang);if(cmp=="eng")r
 inline KCSTR STR_DSL_CLASS_PROC(KCSTR _lang){COMPSTR cmp(_lang);if(cmp=="eng")return DEF_DSL_CLASS_PROC_eng;else return DEF_DSL_CLASS_PROC_kor;}
 inline KCSTR STR_DSL_CLASS_ACT_SEND(KCSTR _lang){COMPSTR cmp(_lang);if(cmp=="eng")return DEF_DSL_CLASS_ACT_SEND_eng;else return DEF_DSL_CLASS_ACT_SEND_kor;}
 inline KCSTR STR_DSL_CLASS_ACT_TIMER(KCSTR _lang){COMPSTR cmp(_lang);if(cmp=="eng")return DEF_DSL_CLASS_ACT_TIMER_eng;else return DEF_DSL_CLASS_ACT_TIMER_kor;}
+inline KCSTR STR_DSL_CLASS_ACT_CRON(KCSTR _lang){COMPSTR cmp(_lang);if(cmp=="eng")return DEF_DSL_CLASS_ACT_CRON_eng;else return DEF_DSL_CLASS_ACT_CRON_kor;}
 inline KCSTR STR_DSL_CLASS_STMT(KCSTR _lang){COMPSTR cmp(_lang);if(cmp=="eng")return DEF_DSL_CLASS_STMT_eng;else return DEF_DSL_CLASS_STMT_kor;}
 inline KCSTR STR_DSL_CLASS_INI(KCSTR _lang){COMPSTR cmp(_lang);if(cmp=="eng")return DEF_DSL_CLASS_INI_eng;else return DEF_DSL_CLASS_INI_kor;}
 

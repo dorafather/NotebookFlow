@@ -13,7 +13,6 @@ class Flow : public QTHREAD
 		Flow();
 		~Flow();
 		static Flow & OBJ();
-		void bootStrap();
 		void RUNFLOW(int argc, char ** argv);
 		void applyAddrConfig(RestMsg & _msg);
 		void applyFlowConfig(RestMsg & _msg);
@@ -21,11 +20,14 @@ class Flow : public QTHREAD
 		void queryAddrConfig(RestMsg & _msg);
 		void queryFlowConfig(RestMsg & _msg);
 		void queryRestConfig(RestMsg & _msg);
-		void PROC(ARG & _arg);
-		void GARBAGE(POOL::POOLDATA & _rData);
 		void PUT(KCSTR _addr, KCSTR  _msg);
 		void NOTIFY(QTHREAD & _wk, POOL::POOLDATA & _rPool, RestMsg & _msg);
 		virtual void ACTION(QTHREAD & _wk, POOL::POOLDATA & _rPool, RestMsg & _msg)=0;
+		void bootStrap();
+		static void Logging(KCSTR _pszFormat, ...);
+	private:
+		void PROC(ARG & _arg);
+		void GARBAGE(POOL::POOLDATA & _rData);
 		void termSession(QTHREAD & _wk, POOL::POOLDATA  & _rPool,KCSTR _reason);
 		void termTimer(QTHREAD & _wk, POOL::POOLDATA  & _rPool, KCSTR _id);
 		void procTimeOut(QTHREAD & _wk, ARG & _arg, RestMsg & _rcvMsg);
@@ -37,8 +39,6 @@ class Flow : public QTHREAD
 		void procNonTimeOut(QTHREAD & _wk, ARG & _arg, RestMsg & _rcvMsg);
 		void procNonProto(QTHREAD & _wk, ARG & _arg, RestMsg & _rcvMsg);
 		void proc(QTHREAD & _wk, ARG & _arg);
-		static void Logging(	KCSTR _pszFormat, ...);
-	private:
 		POOL::POOLDATA m_gPool;
 		MainP * m_pmain;
 		static Flow * m_pInst;

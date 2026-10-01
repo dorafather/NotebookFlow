@@ -52,5 +52,7 @@ interpretor/EXESTATE.cpp
 interpretor/EXESTMT.cpp
 interpretor/EXEFUNC.cpp
 interpretor/EXELOG.cpp
+encrypt/AES256.cpp
+encrypt/SHA256.cpp
 flow/FLOW.cpp
 flow/MAINP.cpp

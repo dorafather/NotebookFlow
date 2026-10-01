@@ -12,7 +12,6 @@
   FLOW.수신메시지.이벤트명 == NF봇타이머    처리.NF봇핑전송
   FLOW.수신메시지.이벤트명 == NF봇그룹메시지전송    처리.NF봇그룹메시지직접트리거
   FLOW.수신메시지.이벤트명 == 업데이트확인틱    처리.업데이트확인처리
-  FLOW.수신메시지.이벤트명 == 크론틱         처리.크론틱처리
   UPDATE.수신메시지.응답코드 == 200    처리.업데이트버전확인응답처리
   UPDATE.수신메시지.응답코드 == 403    처리.업데이트확인실패처리
   UPDATE.수신메시지.응답코드 == 404    처리.업데이트확인실패처리
@@ -25,6 +24,7 @@
   KECO.수신메시지.응답코드 == 200    처리.KECO응답분기처리
   FLOW.수신메시지.이벤트명 == 공휴일알림틱    처리.공휴일알림확인처리
   KMA_SPCD.수신메시지.응답코드 == 200    처리.KMASPCD응답분기처리
+  MOLIT.수신메시지.응답코드 == 200    처리.MOLIT응답분기처리
   TELEGRAM.수신메시지.이벤트명 == 텔레그램타이머    처리.텔레그램핑전송
   TELEGRAM.수신메시지.이벤트명 == 텔레그램환영타이머    처리.텔레그램환영처리
   TELEGRAM.수신메시지.ok == 1    처리.텔레그램수신처리
@@ -167,6 +167,7 @@
     함수.앞자리비교(cmd_기상청,수신메시지.result[0].message.text,기상청)
     함수.앞자리비교(cmd_미세먼지,수신메시지.result[0].message.text,미세먼지)
     함수.앞자리비교(cmd_공휴일,수신메시지.result[0].message.text,공휴일)
+    함수.앞자리비교(cmd_실거래가,수신메시지.result[0].message.text,실거래가)
     처리.텔레그램수신메시지분기
   그외
     함수.더하기(tg_offset,수신메시지.result[0].update_id,1)
@@ -278,6 +279,8 @@
     처리.텔레그램미세먼지명령처리
   그외그외(세션.cmd_공휴일 == 1)
     처리.텔레그램공휴일명령처리
+  그외그외(세션.cmd_실거래가 == 1)
+    처리.텔레그램실거래가명령처리
   그외
     전송.델레그램응답전송
 }
@@ -3577,3 +3580,133 @@ $$$세션.keco_watch_alert_text$$$}
 {[공휴일 알림] 내일($$$세션.kmaspcd_tomorrow_month$$$/$$$세션.kmaspcd_tomorrow_day$$$)은(는) "$$$세션.kmaspcd_match_name$$$"입니다. 쉬는 날이에요!}
 문장::TELEGRAM.KMASPCD월인식실패문장
 {월 형식을 이해하지 못했습니다. "공휴일" 또는 "공휴일 10월"처럼 말씀해주세요.}
+처리::TELEGRAM.텔레그램실거래가명령처리
+{
+  만약에(참)
+    함수.단어분리(molit_cmd_word_list,수신메시지.result[0].message.text)
+    함수.단어합치기(cmd_rest,세션.리스트.molit_cmd_word_list,1)
+    함수.저장(pending_reply_chat_id,수신메시지.result[0].message.chat.id)
+    처리.MOLIT명령파싱
+}
+처리::MOLIT.MOLIT명령파싱
+{
+  만약에(세션.cmd_rest == NULL)
+    함수.날짜(molit_deal_ymd,%Y%m)
+    처리.MOLIT월분해
+  그외
+    함수.단어분리(molit_arg_word_list,세션.cmd_rest)
+    처리.MOLIT인자개수분기
+}
+처리::MOLIT.MOLIT인자개수분기
+{
+  만약에(세션.리스트.molit_arg_word_list.SIZE == 1)
+    함수.저장(molit_month_candidate,세션.리스트.molit_arg_word_list[0])
+    처리.MOLIT단어유효성검사
+  그외그외(세션.리스트.molit_arg_word_list.SIZE == 2)
+    함수.저장(molit_month_candidate,세션.리스트.molit_arg_word_list[1])
+    처리.MOLIT단어유효성검사
+  그외
+    함수.저장(molit_reply_text,문장.MOLIT파싱실패문장)
+    전송.MOLIT응답전송
+}
+처리::MOLIT.MOLIT단어유효성검사
+{
+  만약에(세션.molit_month_candidate.길이 == 6)
+    함수.저장(molit_deal_ymd,세션.molit_month_candidate)
+    처리.MOLIT월분해
+  그외
+    함수.저장(molit_reply_text,문장.MOLIT파싱실패문장)
+    전송.MOLIT응답전송
+}
+처리::MOLIT.MOLIT월분해
+{
+  만약에(참)
+    함수.추출(molit_year,세션.molit_deal_ymd,0,4)
+    함수.추출(molit_month,세션.molit_deal_ymd,4,2)
+    함수.저장(molit_region_name,설정.MOLIT.default_region_name)
+    전송.MOLIT실거래가조회전송
+}
+처리::MOLIT.MOLIT응답분기처리
+{
+  만약에(수신메시지.response.body.totalCount == 0)
+    함수.저장(molit_reply_text,문장.MOLIT거래없음문장)
+    전송.MOLIT응답전송
+  그외그외(수신메시지.response.body.totalCount == 1)
+    함수.저장(molit_apt_nm,수신메시지.response.body.items.item.aptNm)
+    함수.저장(molit_area,수신메시지.response.body.items.item.excluUseAr)
+    함수.저장(molit_amount,수신메시지.response.body.items.item.dealAmount)
+    함수.저장(molit_day,수신메시지.response.body.items.item.dealDay)
+    함수.저장(molit_summary_lines,문장.MOLIT거래라인문장_단일)
+    함수.저장(molit_reply_text,문장.MOLIT요약문장_단일)
+    전송.MOLIT응답전송
+  그외
+    함수.객체저장(molit_items,수신메시지.response.body.items.item)
+    함수.저장(molit_idx,0)
+    함수.저장(molit_count,0)
+    함수.저장(molit_summary_lines,없음)
+    처리.MOLIT항목순회
+}
+처리::MOLIT.MOLIT항목순회
+{
+  만약에(세션.객체.molit_items[세션.molit_idx].aptNm == NULL)
+    함수.저장(molit_reply_text,문장.MOLIT요약문장)
+    전송.MOLIT응답전송
+  그외그외(세션.molit_count >= 5)
+    함수.저장(molit_reply_text,문장.MOLIT요약문장)
+    전송.MOLIT응답전송
+  그외
+    처리.MOLIT항목추가
+}
+처리::MOLIT.MOLIT항목추가
+{
+  만약에(세션.molit_count == 0)
+    함수.저장(molit_summary_lines,문장.MOLIT거래라인문장)
+    함수.더하기(molit_count,세션.molit_count,1)
+    함수.더하기(molit_idx,세션.molit_idx,1)
+    처리.MOLIT항목순회
+  그외
+    함수.붙이기(molit_summary_lines,|,문장.MOLIT거래라인문장)
+    함수.더하기(molit_count,세션.molit_count,1)
+    함수.더하기(molit_idx,세션.molit_idx,1)
+    처리.MOLIT항목순회
+}
+전송::MOLIT.MOLIT실거래가조회전송
+{
+  전송메시지.메소드 = GET
+  전송메시지.주소.도메인 = 설정.MOLIT.domain
+  전송메시지.주소.경로 = /getRTMSDataSvcAptTrade
+  전송메시지.주소.파라미터[0].key = serviceKey
+  전송메시지.주소.파라미터[0].val = 설정.MOLIT.service_key
+  전송메시지.주소.파라미터[1].key = LAWD_CD
+  전송메시지.주소.파라미터[1].val = 설정.MOLIT.default_region_code
+  전송메시지.주소.파라미터[2].key = DEAL_YMD
+  전송메시지.주소.파라미터[2].val = 세션.molit_deal_ymd
+  전송메시지.주소.파라미터[3].key = pageNo
+  전송메시지.주소.파라미터[3].val = 1
+  전송메시지.주소.파라미터[4].key = numOfRows
+  전송메시지.주소.파라미터[4].val = 50
+  전송메시지.주소.파라미터[5].key = _type
+  전송메시지.주소.파라미터[5].val = json
+}
+전송::TELEGRAM.MOLIT응답전송
+{
+  전송메시지.메소드 = GET
+  전송메시지.주소.도메인 = 설정.TELEGRAM.domain
+  전송메시지.주소.경로 = 문장.텔레그램응답경로
+  전송메시지.주소.파라미터[0].key = chat_id
+  전송메시지.주소.파라미터[0].val = 세션.pending_reply_chat_id
+  전송메시지.주소.파라미터[1].key = text
+  전송메시지.주소.파라미터[1].val = 세션.molit_reply_text
+}
+문장::MOLIT.MOLIT거래라인문장
+{$$$세션.객체.molit_items[세션.molit_idx].aptNm$$$ $$$세션.객체.molit_items[세션.molit_idx].excluUseAr$$$㎡ $$$세션.객체.molit_items[세션.molit_idx].dealAmount$$$만원 ($$$세션.객체.molit_items[세션.molit_idx].dealDay$$$일)}
+문장::MOLIT.MOLIT거래라인문장_단일
+{$$$세션.molit_apt_nm$$$ $$$세션.molit_area$$$㎡ $$$세션.molit_amount$$$만원 ($$$세션.molit_day$$$일)}
+문장::MOLIT.MOLIT요약문장
+{$$$세션.molit_region_name$$$ $$$세션.molit_year$$$년 $$$세션.molit_month$$$월 아파트 매매 실거래가 (최근 $$$세션.molit_count$$$건): $$$세션.molit_summary_lines$$$}
+문장::MOLIT.MOLIT요약문장_단일
+{$$$세션.molit_region_name$$$ $$$세션.molit_year$$$년 $$$세션.molit_month$$$월 아파트 매매 실거래가 (1건): $$$세션.molit_summary_lines$$$}
+문장::MOLIT.MOLIT거래없음문장
+{$$$세션.molit_region_name$$$ $$$세션.molit_year$$$년 $$$세션.molit_month$$$월에는 아파트 매매 거래 내역이 없습니다.}
+문장::TELEGRAM.MOLIT파싱실패문장
+{계약년월 형식을 이해하지 못했습니다. "실거래가" 또는 "실거래가 202410"처럼 말씀해주세요.}

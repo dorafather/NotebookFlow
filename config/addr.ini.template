@@ -187,5 +187,20 @@ domain=https://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService
 alert_hour=21
 telegram_alias=공휴일
 
+# 국토교통부 아파트 매매 실거래가 자료 - 공공데이터포털에서 본인 명의로
+# 발급받은 서비스키가 필요합니다(무료, 개인별 발급 - KRX/KMA/KECO/KMA_SPCD와
+# 같은 포털이라 서비스키를 공유하는 경우가 많습니다). 이 API는 "동네 이름"이
+# 아니라 "법정동 코드"(앞 5자리)로 조회해야 하므로, 자주 조회할 동네를
+# default_region_name(표시용 이름)/default_region_code(법정동 코드 5자리)
+# 로 미리 등록해둡니다. 다른 동네를 조회하려면 법정동 코드를 직접 알아야
+# 하며(행정표준코드관리시스템 www.code.go.kr 참고), 추가로 등록하고 싶은
+# 동네가 있으면 같은 방식으로 이름/코드 쌍을 늘려가면 됩니다.
+[MOLIT]
+service_key=<여기에 공공데이터포털에서 발급받은 본인의 서비스키를 입력하세요>
+domain=https://apis.data.go.kr/1613000/RTMSDataSvcAptTrade
+default_region_name=강남구
+default_region_code=11680
+telegram_alias=실거래가
+
 [TRACE]
 name=TELEGRAM

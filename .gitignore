@@ -83,6 +83,16 @@ test_*.exe
 test_*.ilk
 test_*.pdb
 
+# ---- Android NDK/JNI 빌드 산출물 (2026-10-01, phoneFlow 전 단계 프로토타입) ----
+# android-flow/jni/의 소스(flowjni.cpp/JniApp.h/cpp)는 커밋 대상이지만,
+# 컴파일된 .o/.a/.so는 다른 빌드 산출물과 동일하게 제외 - 재빌드로 항상
+# 재생성 가능하고, 커밋하면 저장소 히스토리에 수십 MB가 영구히 남는다.
+libUtil/build-android/
+android-flow/build/
+*.o
+*.a
+*.so
+
 # ---- 로컬 에이전트 메모리 / 개인 도구 상태 ----
 .claude/
 

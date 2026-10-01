@@ -81,10 +81,22 @@ bool ExeIf::EXE_IFProc(KSTRING & ifA,
 				return false;
 			}
 		}
+		// claude-code 2026-10-01 (dorafather 승인): 다중값 구분자를 "/"에서
+		// "^"로 교체. PROCPARSER/ACTIONPARSER/STATEPARSER가 파싱 시점에
+		// 리터럴 "/"를 전부 "^^^"로 치환하는데(2부 2.11절, URL 경로 보존용)
+		// 처리::의 만약에 조건(이 EXEIF.cpp 경로)은 그 치환을 실행 전에
+		// 복원하지 않아, "/"로 다중값을 나누려 해도 이미 "^^^"로 바뀐
+		// 뒤라 하나도 안 쪼개져 항상 매치에 실패했다(실측 확인, CLAUDE.md
+		// 1.20절). "^"는 이 치환 대상이 아니라서 처리:: 조건에서도 안전하게
+		// 구분자로 쓸 수 있다.
+#if 1
+		TOKSTR tok; tok = (KCSTR)B;tok.TOK("^");
+#else
 		TOKSTR tok; tok = (KCSTR)B;tok.TOK("/");
+#endif
 		for(KUINT i=0;i<tok.NUMS();i++)
 		{
-			if(A == tok[i]) 
+			if(A == tok[i])
 			{
 				return true;
 			}
@@ -164,7 +176,11 @@ bool ExeIf::EXE_IFProc(KSTRING & ifA,
 		{
 			return false;
 		}
+#if 1
+		TOKSTR tok; tok = (KCSTR)B; tok.TOK("^");  // claude-code 2026-10-01: 위 == 분기와 동일한 이유로 "/"→"^" 교체
+#else
 		TOKSTR tok; tok = (KCSTR)B; tok.TOK("/");
+#endif
 		for(KUINT i=0;i<tok.NUMS();i++)
 		{
 			if(STRSTR((KSTR)A,(KSTR)tok[i]))
@@ -180,10 +196,14 @@ bool ExeIf::EXE_IFProc(KSTRING & ifA,
 		{
 			return false;
 		}
+#if 1
+		TOKSTR tok; tok = (KCSTR)B;tok.TOK("^");  // claude-code 2026-10-01: 위 == 분기와 동일한 이유로 "/"→"^" 교체
+#else
 		TOKSTR tok; tok = (KCSTR)B;tok.TOK("/");
+#endif
 		for(KUINT i=0;i<tok.NUMS();i++)
 		{
-			if(strncmp((KSTR)A,(KSTR)tok[i],tok[i].LENGTH())==0) 
+			if(strncmp((KSTR)A,(KSTR)tok[i],tok[i].LENGTH())==0)
 			{
 				return true;
 			}

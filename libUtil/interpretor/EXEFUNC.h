@@ -1,7 +1,10 @@
 #ifndef EXE_FUNC_H
 #define EXE_FUNC_H
 #include "FUNCPARSER.h"
+#include "SESSION.h"
+#include "QUEUETHREAD.h"
 
+#define DEF_DSL_ENABLE_USER_FUNCTION
 namespace nsUtil
 {
 typedef bool (*EXE_FP)(QTHREAD & _wk, 
@@ -12,6 +15,18 @@ struct ExeEntry
     eExeType    type;       
     EXE_FP      func;   
 };
+#ifdef DEF_DSL_ENABLE_USER_FUNCTION
+class UserFunc : public StlObject
+{
+	public:
+		UserFunc();
+		~UserFunc();
+		UserFunc(KCSTR _name, EXE_FP _pfn);
+		bool isMatch(KCSTR _name);
+		KSTRING m_name;
+		ExeEntry m_entry;		
+};
+#endif
 class ExeFunc
 {
 	public:
@@ -86,6 +101,15 @@ class ExeFunc
 		static bool EXE_SETINI( QTHREAD & _wk,
 						POOL::POOLDATA & _rPool, RestMsg & _req,
 						ALIST & _params);
+		#ifdef DEF_DSL_ENABLE_USER_FUNCTION
+		static void addUserFunc(UserFunc & _userFunc);
+		static bool validUserFunc(KCSTR _name);
+		static UserFunc * findUserFunc(KCSTR _name);
+		static bool exeUserFunc(KCSTR _name,QTHREAD & _wk, 
+						POOL::POOLDATA & _rPool, RestMsg & _req,
+						ALIST & _params);
+		static StlList m_listUser;
+		#endif
 		static void copyParam(ALIST & _dst, RestParam & _src);
 		static KCSTR paramone(KSTRING & _value,
 						POOL::POOLDATA & _rPool,
@@ -95,5 +119,10 @@ class ExeFunc
 		const ExeEntry* findfuncbytype(eExeType _type);
 		FuncParser * m_dsl;
 };
+inline void addAppFunc(KCSTR _name, EXE_FP _pfn)
+{
+	UserFunc mfunc(_name,_pfn);
+	ExeFunc::addUserFunc(mfunc);
+}
 }
 #endif

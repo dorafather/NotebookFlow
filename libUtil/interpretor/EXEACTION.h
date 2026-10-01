@@ -21,6 +21,9 @@ class ExeAction
 		bool EXE_TIMER(QTHREAD & _wk,
 					POOL::POOLDATA & _rPool,
 					RestMsg & _req);
+		bool EXE_CRON(QTHREAD & _wk,
+					POOL::POOLDATA & _rPool,
+					RestMsg & _req);
 		ActionParser * m_dsl;
 };
 }

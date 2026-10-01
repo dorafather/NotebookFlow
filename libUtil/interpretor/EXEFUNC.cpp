@@ -33,6 +33,22 @@ ExeEntry g_ExeTable[EXE_TYPE_MAX] =
     { EXE_TYPE_WORDSUM,      &ExeFunc::EXE_WORDSUM      },
     { EXE_TYPE_SET_INI,      &ExeFunc::EXE_SETINI      },
 };
+#ifdef DEF_DSL_ENABLE_USER_FUNCTION
+StlList ExeFunc::m_listUser;
+UserFunc::UserFunc(){}
+UserFunc::~UserFunc(){}
+UserFunc::UserFunc(KCSTR _name, EXE_FP _pfn)
+{
+	setkey(_name);
+	m_name = _name;
+	m_entry.func = _pfn;
+}
+bool UserFunc::isMatch(KCSTR _name)
+{
+	if(m_name == _name) return true;
+	return false;
+}
+#endif
 KCSTR str_insert(KSTRING & _src,KCSTR _insert, size_t _pos)
 {
 	if (_pos > _src.LENGTH()) return (KCSTR)_src;
@@ -72,7 +88,11 @@ bool ExeFunc::EXE(QTHREAD & _wk,
 	const ExeEntry* pEntry = findfuncbyname((KCSTR)ifP.m_funcName);    
 	if (pEntry == NULL)   
 	{            
-		return false;    
+		#ifdef DEF_DSL_ENABLE_USER_FUNCTION
+		return exeUserFunc((KCSTR)ifP.m_funcName,_wk,_rPool,_req,ifP.m_argList);
+		#else
+		return false;
+		#endif
 	}    
 	if (pEntry->func == NULL)
 	{             
@@ -109,6 +129,48 @@ const ExeEntry* ExeFunc::findfuncbytype(eExeType _type)
         return NULL;
     return &g_ExeTable[_type];
 }
+#ifdef DEF_DSL_ENABLE_USER_FUNCTION
+void ExeFunc::addUserFunc(UserFunc & _userFunc)
+{
+	UserFunc * pNew = new UserFunc;
+	pNew->m_name = _userFunc.m_name;
+	pNew->setkey((KCSTR)_userFunc.m_name);
+	pNew->m_entry.type = _userFunc.m_entry.type;
+	pNew->m_entry.func = _userFunc.m_entry.func;
+	m_listUser.pushback(pNew);
+}
+bool ExeFunc::validUserFunc(KCSTR _name)
+{
+	Iterator itr;
+	UserFunc * pFind = (UserFunc*)m_listUser.next(itr);
+	while(pFind)
+	{
+		if(pFind->isMatch(_name)) return true;
+		pFind = (UserFunc*)m_listUser.next(itr);
+	}
+	return false;
+}
+UserFunc * ExeFunc::findUserFunc(KCSTR _name)
+{
+	if(COMPSTR(_name).LENGTH()==0) return NULL;
+	Iterator itr;
+	UserFunc * pFind = (UserFunc*)m_listUser.next(itr);
+	while(pFind)
+	{
+		if(pFind->isMatch(_name)) return pFind;
+		pFind = (UserFunc*)m_listUser.next(itr);
+	}
+	return NULL;
+}
+bool ExeFunc::exeUserFunc(KCSTR _name, QTHREAD & _wk, 
+						POOL::POOLDATA & _rPool, RestMsg & _req,
+						ALIST & _params)
+{
+	UserFunc * pFind = findUserFunc(_name);
+	if(pFind == NULL) return false;
+	return pFind->m_entry.func(_wk,_rPool,_req,_params);
+}
+#endif
 bool ExeFunc::EXE_SET( QTHREAD & _wk,
 						POOL::POOLDATA & _rPool, RestMsg & _req,
 						ALIST & _params)
