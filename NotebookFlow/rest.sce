@@ -12,6 +12,7 @@
   FLOW.수신메시지.이벤트명 == NF봇타이머    처리.NF봇핑전송
   FLOW.수신메시지.이벤트명 == NF봇그룹메시지전송    처리.NF봇그룹메시지직접트리거
   FLOW.수신메시지.이벤트명 == 업데이트확인틱    처리.업데이트확인처리
+  FLOW.수신메시지.이벤트명 == 크론틱         처리.크론틱처리
   UPDATE.수신메시지.응답코드 == 200    처리.업데이트버전확인응답처리
   UPDATE.수신메시지.응답코드 == 403    처리.업데이트확인실패처리
   UPDATE.수신메시지.응답코드 == 404    처리.업데이트확인실패처리
@@ -22,6 +23,8 @@
   KMA.수신메시지.응답코드 == 200    처리.KMA응답분기처리
   FLOW.수신메시지.이벤트명 == 미세먼지알림틱    처리.미세먼지알림확인처리
   KECO.수신메시지.응답코드 == 200    처리.KECO응답분기처리
+  FLOW.수신메시지.이벤트명 == 공휴일알림틱    처리.공휴일알림확인처리
+  KMA_SPCD.수신메시지.응답코드 == 200    처리.KMASPCD응답분기처리
   TELEGRAM.수신메시지.이벤트명 == 텔레그램타이머    처리.텔레그램핑전송
   TELEGRAM.수신메시지.이벤트명 == 텔레그램환영타이머    처리.텔레그램환영처리
   TELEGRAM.수신메시지.ok == 1    처리.텔레그램수신처리
@@ -53,6 +56,7 @@
     타이머.기상알림타이머
     처리.미세먼지관심지역초기화
     타이머.미세먼지알림타이머
+    타이머.공휴일알림타이머
 }
 처리::FLOW.클루드코드완료처리
 {
@@ -162,6 +166,7 @@
     함수.앞자리비교(cmd_주식,수신메시지.result[0].message.text,주식)
     함수.앞자리비교(cmd_기상청,수신메시지.result[0].message.text,기상청)
     함수.앞자리비교(cmd_미세먼지,수신메시지.result[0].message.text,미세먼지)
+    함수.앞자리비교(cmd_공휴일,수신메시지.result[0].message.text,공휴일)
     처리.텔레그램수신메시지분기
   그외
     함수.더하기(tg_offset,수신메시지.result[0].update_id,1)
@@ -271,6 +276,8 @@
     처리.텔레그램기상청명령처리
   그외그외(세션.cmd_미세먼지 == 1)
     처리.텔레그램미세먼지명령처리
+  그외그외(세션.cmd_공휴일 == 1)
+    처리.텔레그램공휴일명령처리
   그외
     전송.델레그램응답전송
 }
@@ -3216,3 +3223,357 @@ $$$세션.keco_watch_alert_text$$$}
 {등록된 관심지역이 없습니다. "미세먼지 지역 추가 서울"처럼 말씀해주세요.}
 문장::TELEGRAM.KECO지역추가한도초과문장
 {이미 관심지역이 5개 등록되어 있어 더 추가할 수 없습니다. 기존 지역을 삭제한 후 다시 시도해주세요.}
+처리::TELEGRAM.텔레그램공휴일명령처리
+{
+  만약에(참)
+    함수.단어분리(kmaspcd_cmd_word_list,수신메시지.result[0].message.text)
+    함수.단어합치기(cmd_rest,세션.리스트.kmaspcd_cmd_word_list,1)
+    함수.저장(pending_reply_chat_id,수신메시지.result[0].message.chat.id)
+    처리.KMASPCD월파싱
+}
+처리::KMA_SPCD.KMASPCD월파싱
+{
+  만약에(세션.cmd_rest == NULL)
+    함수.날짜(kmaspcd_query_year,%Y)
+    함수.날짜(kmaspcd_query_month,%m)
+    함수.저장(kmaspcd_mode,조회단건)
+    전송.KMASPCD공휴일조회전송
+  그외그외(세션.cmd_rest.길이 == 1)
+    함수.날짜(kmaspcd_query_year,%Y)
+    함수.저장(kmaspcd_query_month,0)
+    함수.붙이기(kmaspcd_query_month,세션.cmd_rest)
+    함수.저장(kmaspcd_mode,조회단건)
+    전송.KMASPCD공휴일조회전송
+  그외그외(세션.cmd_rest.길이 == 2)
+    함수.날짜(kmaspcd_query_year,%Y)
+    함수.저장(kmaspcd_query_month,세션.cmd_rest)
+    함수.저장(kmaspcd_mode,조회단건)
+    전송.KMASPCD공휴일조회전송
+  그외그외(세션.cmd_rest.길이 == 4)
+    함수.추출(kmaspcd_month_digit,세션.cmd_rest,0,1)
+    함수.날짜(kmaspcd_query_year,%Y)
+    함수.저장(kmaspcd_query_month,0)
+    함수.붙이기(kmaspcd_query_month,세션.kmaspcd_month_digit)
+    함수.저장(kmaspcd_mode,조회단건)
+    전송.KMASPCD공휴일조회전송
+  그외그외(세션.cmd_rest.길이 == 5)
+    함수.추출(kmaspcd_query_month,세션.cmd_rest,0,2)
+    함수.날짜(kmaspcd_query_year,%Y)
+    함수.저장(kmaspcd_mode,조회단건)
+    전송.KMASPCD공휴일조회전송
+  그외
+    함수.저장(kmaspcd_reply_text,문장.KMASPCD월인식실패문장)
+    전송.KMASPCD응답전송
+}
+처리::FLOW.공휴일알림확인처리
+{
+  만약에(참)
+    함수.날짜(kmaspcd_alert_hour_now,%H)
+    타이머.공휴일알림타이머
+    처리.공휴일알림시각비교
+}
+처리::FLOW.공휴일알림시각비교
+{
+  만약에(세션.kmaspcd_alert_hour_now == 설정.KMA_SPCD.alert_hour)
+    함수.저장(kmaspcd_mode,폴링)
+    처리.KMASPCD내일계산준비
+  그외
+    로그.출력(공휴일 알림 스킵 - 시각 불일치)
+}
+처리::KMA_SPCD.KMASPCD내일계산준비
+{
+  만약에(참)
+    함수.날짜(kmaspcd_today_year,%Y)
+    함수.날짜(kmaspcd_today_month,%m)
+    함수.날짜(kmaspcd_today_day,%d)
+    처리.KMASPCD말일판정
+}
+처리::KMA_SPCD.KMASPCD말일판정
+{
+  만약에(세션.kmaspcd_today_month == 01)
+    함수.저장(kmaspcd_last_day,31)
+    처리.KMASPCD내일계산
+  그외그외(세션.kmaspcd_today_month == 02)
+    처리.KMASPCD윤년판정
+  그외그외(세션.kmaspcd_today_month == 03)
+    함수.저장(kmaspcd_last_day,31)
+    처리.KMASPCD내일계산
+  그외그외(세션.kmaspcd_today_month == 04)
+    함수.저장(kmaspcd_last_day,30)
+    처리.KMASPCD내일계산
+  그외그외(세션.kmaspcd_today_month == 05)
+    함수.저장(kmaspcd_last_day,31)
+    처리.KMASPCD내일계산
+  그외그외(세션.kmaspcd_today_month == 06)
+    함수.저장(kmaspcd_last_day,30)
+    처리.KMASPCD내일계산
+  그외그외(세션.kmaspcd_today_month == 07)
+    함수.저장(kmaspcd_last_day,31)
+    처리.KMASPCD내일계산
+  그외그외(세션.kmaspcd_today_month == 08)
+    함수.저장(kmaspcd_last_day,31)
+    처리.KMASPCD내일계산
+  그외그외(세션.kmaspcd_today_month == 09)
+    함수.저장(kmaspcd_last_day,30)
+    처리.KMASPCD내일계산
+  그외그외(세션.kmaspcd_today_month == 10)
+    함수.저장(kmaspcd_last_day,31)
+    처리.KMASPCD내일계산
+  그외그외(세션.kmaspcd_today_month == 11)
+    함수.저장(kmaspcd_last_day,30)
+    처리.KMASPCD내일계산
+  그외
+    함수.저장(kmaspcd_last_day,31)
+    처리.KMASPCD내일계산
+}
+처리::KMA_SPCD.KMASPCD윤년판정
+{
+  만약에(참)
+    함수.나머지(kmaspcd_mod4,세션.kmaspcd_today_year,4)
+    함수.나머지(kmaspcd_mod100,세션.kmaspcd_today_year,100)
+    함수.나머지(kmaspcd_mod400,세션.kmaspcd_today_year,400)
+    처리.KMASPCD윤년분기
+}
+처리::KMA_SPCD.KMASPCD윤년분기
+{
+  만약에(세션.kmaspcd_mod4 == 0) 그리고(세션.kmaspcd_mod100 != 0)
+    함수.저장(kmaspcd_last_day,29)
+    처리.KMASPCD내일계산
+  그외그외(세션.kmaspcd_mod400 == 0)
+    함수.저장(kmaspcd_last_day,29)
+    처리.KMASPCD내일계산
+  그외
+    함수.저장(kmaspcd_last_day,28)
+    처리.KMASPCD내일계산
+}
+처리::KMA_SPCD.KMASPCD내일계산
+{
+  만약에(세션.kmaspcd_today_day == 세션.kmaspcd_last_day)
+    처리.KMASPCD월경계처리
+  그외
+    함수.더하기(kmaspcd_tomorrow_day_raw,세션.kmaspcd_today_day,1)
+    함수.저장(kmaspcd_tomorrow_year,세션.kmaspcd_today_year)
+    함수.저장(kmaspcd_tomorrow_month,세션.kmaspcd_today_month)
+    처리.KMASPCD일자패딩
+}
+처리::KMA_SPCD.KMASPCD월경계처리
+{
+  만약에(세션.kmaspcd_today_month == 12)
+    함수.더하기(kmaspcd_tomorrow_year,세션.kmaspcd_today_year,1)
+    함수.저장(kmaspcd_tomorrow_month,01)
+    함수.저장(kmaspcd_tomorrow_day_raw,1)
+    처리.KMASPCD일자패딩
+  그외그외(세션.kmaspcd_today_month == 01)
+    함수.저장(kmaspcd_tomorrow_year,세션.kmaspcd_today_year)
+    함수.저장(kmaspcd_tomorrow_month,02)
+    함수.저장(kmaspcd_tomorrow_day_raw,1)
+    처리.KMASPCD일자패딩
+  그외그외(세션.kmaspcd_today_month == 02)
+    함수.저장(kmaspcd_tomorrow_year,세션.kmaspcd_today_year)
+    함수.저장(kmaspcd_tomorrow_month,03)
+    함수.저장(kmaspcd_tomorrow_day_raw,1)
+    처리.KMASPCD일자패딩
+  그외그외(세션.kmaspcd_today_month == 03)
+    함수.저장(kmaspcd_tomorrow_year,세션.kmaspcd_today_year)
+    함수.저장(kmaspcd_tomorrow_month,04)
+    함수.저장(kmaspcd_tomorrow_day_raw,1)
+    처리.KMASPCD일자패딩
+  그외그외(세션.kmaspcd_today_month == 04)
+    함수.저장(kmaspcd_tomorrow_year,세션.kmaspcd_today_year)
+    함수.저장(kmaspcd_tomorrow_month,05)
+    함수.저장(kmaspcd_tomorrow_day_raw,1)
+    처리.KMASPCD일자패딩
+  그외그외(세션.kmaspcd_today_month == 05)
+    함수.저장(kmaspcd_tomorrow_year,세션.kmaspcd_today_year)
+    함수.저장(kmaspcd_tomorrow_month,06)
+    함수.저장(kmaspcd_tomorrow_day_raw,1)
+    처리.KMASPCD일자패딩
+  그외그외(세션.kmaspcd_today_month == 06)
+    함수.저장(kmaspcd_tomorrow_year,세션.kmaspcd_today_year)
+    함수.저장(kmaspcd_tomorrow_month,07)
+    함수.저장(kmaspcd_tomorrow_day_raw,1)
+    처리.KMASPCD일자패딩
+  그외그외(세션.kmaspcd_today_month == 07)
+    함수.저장(kmaspcd_tomorrow_year,세션.kmaspcd_today_year)
+    함수.저장(kmaspcd_tomorrow_month,08)
+    함수.저장(kmaspcd_tomorrow_day_raw,1)
+    처리.KMASPCD일자패딩
+  그외그외(세션.kmaspcd_today_month == 08)
+    함수.저장(kmaspcd_tomorrow_year,세션.kmaspcd_today_year)
+    함수.저장(kmaspcd_tomorrow_month,09)
+    함수.저장(kmaspcd_tomorrow_day_raw,1)
+    처리.KMASPCD일자패딩
+  그외그외(세션.kmaspcd_today_month == 09)
+    함수.저장(kmaspcd_tomorrow_year,세션.kmaspcd_today_year)
+    함수.저장(kmaspcd_tomorrow_month,10)
+    함수.저장(kmaspcd_tomorrow_day_raw,1)
+    처리.KMASPCD일자패딩
+  그외그외(세션.kmaspcd_today_month == 10)
+    함수.저장(kmaspcd_tomorrow_year,세션.kmaspcd_today_year)
+    함수.저장(kmaspcd_tomorrow_month,11)
+    함수.저장(kmaspcd_tomorrow_day_raw,1)
+    처리.KMASPCD일자패딩
+  그외
+    함수.저장(kmaspcd_tomorrow_year,세션.kmaspcd_today_year)
+    함수.저장(kmaspcd_tomorrow_month,12)
+    함수.저장(kmaspcd_tomorrow_day_raw,1)
+    처리.KMASPCD일자패딩
+}
+처리::KMA_SPCD.KMASPCD일자패딩
+{
+  만약에(세션.kmaspcd_tomorrow_day_raw.길이 == 1)
+    함수.저장(kmaspcd_tomorrow_day,0)
+    함수.붙이기(kmaspcd_tomorrow_day,세션.kmaspcd_tomorrow_day_raw)
+    처리.KMASPCD내일날짜조합
+  그외
+    함수.저장(kmaspcd_tomorrow_day,세션.kmaspcd_tomorrow_day_raw)
+    처리.KMASPCD내일날짜조합
+}
+처리::KMA_SPCD.KMASPCD내일날짜조합
+{
+  만약에(참)
+    함수.저장(kmaspcd_tomorrow_ymd,세션.kmaspcd_tomorrow_year)
+    함수.붙이기(kmaspcd_tomorrow_ymd,세션.kmaspcd_tomorrow_month,세션.kmaspcd_tomorrow_day)
+    함수.저장(kmaspcd_query_year,세션.kmaspcd_tomorrow_year)
+    함수.저장(kmaspcd_query_month,세션.kmaspcd_tomorrow_month)
+    전송.KMASPCD공휴일조회전송
+}
+처리::KMA_SPCD.KMASPCD응답분기처리
+{
+  만약에(수신메시지.response.body.totalCount == 0)
+    함수.저장(kmaspcd_match_name,없음)
+    처리.KMASPCD공휴일없음처리
+  그외그외(수신메시지.response.body.totalCount == 1)
+    함수.저장(kmaspcd_match_name,없음)
+    함수.저장(kmaspcd_single_locdate,수신메시지.response.body.items.item.locdate)
+    함수.저장(kmaspcd_single_name,수신메시지.response.body.items.item.dateName)
+    처리.KMASPCD단일항목처리
+  그외
+    함수.객체저장(kmaspcd_items,수신메시지.response.body.items.item)
+    함수.저장(kmaspcd_idx,0)
+    함수.저장(kmaspcd_summary_lines,없음)
+    함수.저장(kmaspcd_summary_found,0)
+    함수.저장(kmaspcd_match_name,없음)
+    처리.KMASPCD항목순회
+}
+처리::KMA_SPCD.KMASPCD공휴일없음처리
+{
+  만약에(세션.kmaspcd_mode == 조회단건)
+    함수.저장(kmaspcd_reply_text,문장.KMASPCD월공휴일없음문장)
+    전송.KMASPCD응답전송
+  그외
+    로그.출력(공휴일 알림 - 내일 공휴일 아님, 해당 월 공휴일 없음)
+}
+처리::KMA_SPCD.KMASPCD단일항목처리
+{
+  만약에(세션.kmaspcd_mode == 조회단건)
+    함수.추출(kmaspcd_single_day,세션.kmaspcd_single_locdate,6,2)
+    함수.저장(kmaspcd_reply_text,문장.KMASPCD월공휴일단일문장)
+    전송.KMASPCD응답전송
+  그외그외(세션.kmaspcd_single_locdate == 세션.kmaspcd_tomorrow_ymd)
+    함수.저장(kmaspcd_match_name,세션.kmaspcd_single_name)
+    전송.KMASPCD알림전송
+  그외
+    로그.출력(공휴일 알림 - 내일 공휴일 아님)
+}
+처리::KMA_SPCD.KMASPCD항목순회
+{
+  만약에(세션.객체.kmaspcd_items[세션.kmaspcd_idx].locdate == NULL)
+    처리.KMASPCD순회완료
+  그외
+    처리.KMASPCD항목검사
+}
+처리::KMA_SPCD.KMASPCD항목검사
+{
+  만약에(세션.kmaspcd_mode == 조회단건)
+    함수.저장(kmaspcd_day_raw,세션.객체.kmaspcd_items[세션.kmaspcd_idx].locdate)
+    함수.추출(kmaspcd_day2,세션.kmaspcd_day_raw,6,2)
+    처리.KMASPCD요약항목추가
+  그외그외(세션.객체.kmaspcd_items[세션.kmaspcd_idx].locdate == 세션.kmaspcd_tomorrow_ymd)
+    함수.저장(kmaspcd_match_name,세션.객체.kmaspcd_items[세션.kmaspcd_idx].dateName)
+    함수.더하기(kmaspcd_idx,세션.kmaspcd_idx,1)
+    처리.KMASPCD항목순회
+  그외
+    함수.더하기(kmaspcd_idx,세션.kmaspcd_idx,1)
+    처리.KMASPCD항목순회
+}
+처리::KMA_SPCD.KMASPCD요약항목추가
+{
+  만약에(세션.kmaspcd_summary_found == 0)
+    함수.저장(kmaspcd_summary_lines,문장.KMASPCD요약항목문장)
+    함수.저장(kmaspcd_summary_found,1)
+    함수.더하기(kmaspcd_idx,세션.kmaspcd_idx,1)
+    처리.KMASPCD항목순회
+  그외
+    함수.붙이기(kmaspcd_summary_lines,|,문장.KMASPCD요약항목문장)
+    함수.더하기(kmaspcd_idx,세션.kmaspcd_idx,1)
+    처리.KMASPCD항목순회
+}
+처리::KMA_SPCD.KMASPCD순회완료
+{
+  만약에(세션.kmaspcd_mode == 조회단건) 그리고(세션.kmaspcd_summary_found == 1)
+    함수.저장(kmaspcd_reply_text,문장.KMASPCD월공휴일요약문장)
+    전송.KMASPCD응답전송
+  그외그외(세션.kmaspcd_mode == 조회단건)
+    함수.저장(kmaspcd_reply_text,문장.KMASPCD월공휴일없음문장)
+    전송.KMASPCD응답전송
+  그외그외(세션.kmaspcd_match_name != 없음)
+    전송.KMASPCD알림전송
+  그외
+    로그.출력(공휴일 알림 - 내일 공휴일 아님)
+}
+전송::KMA_SPCD.KMASPCD공휴일조회전송
+{
+  전송메시지.메소드 = GET
+  전송메시지.주소.도메인 = 설정.KMA_SPCD.domain
+  전송메시지.주소.경로 = /getHoliDeInfo
+  전송메시지.주소.파라미터[0].key = ServiceKey
+  전송메시지.주소.파라미터[0].val = 설정.KMA_SPCD.service_key
+  전송메시지.주소.파라미터[1].key = pageNo
+  전송메시지.주소.파라미터[1].val = 1
+  전송메시지.주소.파라미터[2].key = numOfRows
+  전송메시지.주소.파라미터[2].val = 31
+  전송메시지.주소.파라미터[3].key = solYear
+  전송메시지.주소.파라미터[3].val = 세션.kmaspcd_query_year
+  전송메시지.주소.파라미터[4].key = solMonth
+  전송메시지.주소.파라미터[4].val = 세션.kmaspcd_query_month
+  전송메시지.주소.파라미터[5].key = _type
+  전송메시지.주소.파라미터[5].val = json
+}
+전송::TELEGRAM.KMASPCD응답전송
+{
+  전송메시지.메소드 = GET
+  전송메시지.주소.도메인 = 설정.TELEGRAM.domain
+  전송메시지.주소.경로 = 문장.텔레그램응답경로
+  전송메시지.주소.파라미터[0].key = chat_id
+  전송메시지.주소.파라미터[0].val = 세션.pending_reply_chat_id
+  전송메시지.주소.파라미터[1].key = text
+  전송메시지.주소.파라미터[1].val = 세션.kmaspcd_reply_text
+}
+전송::TELEGRAM.KMASPCD알림전송
+{
+  전송메시지.메소드 = GET
+  전송메시지.주소.도메인 = 설정.TELEGRAM.domain
+  전송메시지.주소.경로 = 문장.텔레그램응답경로
+  전송메시지.주소.파라미터[0].key = chat_id
+  전송메시지.주소.파라미터[0].val = 설정.TELEGRAM.my_chat_id
+  전송메시지.주소.파라미터[1].key = text
+  전송메시지.주소.파라미터[1].val = 문장.KMASPCD알림문장
+}
+타이머::KMA_SPCD.공휴일알림타이머
+{
+  전송메시지.이벤트명 = 공휴일알림틱
+  전송메시지.시간 = 3600000
+}
+문장::KMA_SPCD.KMASPCD요약항목문장
+{$$$세션.객체.kmaspcd_items[세션.kmaspcd_idx].dateName$$$($$$세션.kmaspcd_query_month$$$/$$$세션.kmaspcd_day2$$$)}
+문장::KMA_SPCD.KMASPCD월공휴일요약문장
+{$$$세션.kmaspcd_query_month$$$월 공휴일: $$$세션.kmaspcd_summary_lines$$$}
+문장::KMA_SPCD.KMASPCD월공휴일단일문장
+{$$$세션.kmaspcd_query_month$$$월 공휴일: $$$세션.kmaspcd_single_name$$$($$$세션.kmaspcd_query_month$$$/$$$세션.kmaspcd_single_day$$$)}
+문장::KMA_SPCD.KMASPCD월공휴일없음문장
+{$$$세션.kmaspcd_query_month$$$월에는 공휴일이 없습니다.}
+문장::TELEGRAM.KMASPCD알림문장
+{[공휴일 알림] 내일($$$세션.kmaspcd_tomorrow_month$$$/$$$세션.kmaspcd_tomorrow_day$$$)은(는) "$$$세션.kmaspcd_match_name$$$"입니다. 쉬는 날이에요!}
+문장::TELEGRAM.KMASPCD월인식실패문장
+{월 형식을 이해하지 못했습니다. "공휴일" 또는 "공휴일 10월"처럼 말씀해주세요.}
