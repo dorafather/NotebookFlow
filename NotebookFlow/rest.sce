@@ -57,6 +57,7 @@
     처리.미세먼지관심지역초기화
     타이머.미세먼지알림타이머
     타이머.공휴일알림타이머
+    처리.MOLIT관심지역초기화
 }
 처리::FLOW.클루드코드완료처리
 {
@@ -3580,18 +3581,468 @@ $$$세션.keco_watch_alert_text$$$}
 {[공휴일 알림] 내일($$$세션.kmaspcd_tomorrow_month$$$/$$$세션.kmaspcd_tomorrow_day$$$)은(는) "$$$세션.kmaspcd_match_name$$$"입니다. 쉬는 날이에요!}
 문장::TELEGRAM.KMASPCD월인식실패문장
 {월 형식을 이해하지 못했습니다. "공휴일" 또는 "공휴일 10월"처럼 말씀해주세요.}
+처리::FLOW.MOLIT관심지역초기화
+{
+  만약에(참)
+    함수.저장(molit_watch_csv,없음)
+    함수.저장(molit_seed_found,0)
+    함수.저장(molit_ini_category,MOLIT_WATCHLIST)
+    함수.저장(molit_ini_clear_value,없음)
+    함수.저장(molit_ini_pipe,|)
+    함수.저장(molit_ini_colon,:)
+    처리.MOLIT시드확인1
+}
+처리::FLOW.MOLIT시드확인1
+{
+  만약에(설정.MOLIT_WATCHLIST.지역1 != NULL) 그리고(설정.MOLIT_WATCHLIST.지역1 != 없음) 그리고(세션.molit_seed_found != 1)
+    함수.저장(molit_watch_csv,설정.MOLIT_WATCHLIST.지역1)
+    함수.저장(molit_seed_found,1)
+    처리.MOLIT시드확인2
+  그외그외(설정.MOLIT_WATCHLIST.지역1 != NULL) 그리고(설정.MOLIT_WATCHLIST.지역1 != 없음)
+    함수.붙이기(molit_watch_csv,|,설정.MOLIT_WATCHLIST.지역1)
+    처리.MOLIT시드확인2
+  그외
+    처리.MOLIT시드확인2
+}
+처리::FLOW.MOLIT시드확인2
+{
+  만약에(설정.MOLIT_WATCHLIST.지역2 != NULL) 그리고(설정.MOLIT_WATCHLIST.지역2 != 없음) 그리고(세션.molit_seed_found != 1)
+    함수.저장(molit_watch_csv,설정.MOLIT_WATCHLIST.지역2)
+    함수.저장(molit_seed_found,1)
+    처리.MOLIT시드확인3
+  그외그외(설정.MOLIT_WATCHLIST.지역2 != NULL) 그리고(설정.MOLIT_WATCHLIST.지역2 != 없음)
+    함수.붙이기(molit_watch_csv,|,설정.MOLIT_WATCHLIST.지역2)
+    처리.MOLIT시드확인3
+  그외
+    처리.MOLIT시드확인3
+}
+처리::FLOW.MOLIT시드확인3
+{
+  만약에(설정.MOLIT_WATCHLIST.지역3 != NULL) 그리고(설정.MOLIT_WATCHLIST.지역3 != 없음) 그리고(세션.molit_seed_found != 1)
+    함수.저장(molit_watch_csv,설정.MOLIT_WATCHLIST.지역3)
+    함수.저장(molit_seed_found,1)
+    처리.MOLIT시드확인4
+  그외그외(설정.MOLIT_WATCHLIST.지역3 != NULL) 그리고(설정.MOLIT_WATCHLIST.지역3 != 없음)
+    함수.붙이기(molit_watch_csv,|,설정.MOLIT_WATCHLIST.지역3)
+    처리.MOLIT시드확인4
+  그외
+    처리.MOLIT시드확인4
+}
+처리::FLOW.MOLIT시드확인4
+{
+  만약에(설정.MOLIT_WATCHLIST.지역4 != NULL) 그리고(설정.MOLIT_WATCHLIST.지역4 != 없음) 그리고(세션.molit_seed_found != 1)
+    함수.저장(molit_watch_csv,설정.MOLIT_WATCHLIST.지역4)
+    함수.저장(molit_seed_found,1)
+    처리.MOLIT시드확인5
+  그외그외(설정.MOLIT_WATCHLIST.지역4 != NULL) 그리고(설정.MOLIT_WATCHLIST.지역4 != 없음)
+    함수.붙이기(molit_watch_csv,|,설정.MOLIT_WATCHLIST.지역4)
+    처리.MOLIT시드확인5
+  그외
+    처리.MOLIT시드확인5
+}
+처리::FLOW.MOLIT시드확인5
+{
+  만약에(설정.MOLIT_WATCHLIST.지역5 != NULL) 그리고(설정.MOLIT_WATCHLIST.지역5 != 없음) 그리고(세션.molit_seed_found != 1)
+    함수.저장(molit_watch_csv,설정.MOLIT_WATCHLIST.지역5)
+    함수.저장(molit_seed_found,1)
+    로그.출력(실거래가 관심지역 시드 로딩 완료)
+  그외그외(설정.MOLIT_WATCHLIST.지역5 != NULL) 그리고(설정.MOLIT_WATCHLIST.지역5 != 없음)
+    함수.붙이기(molit_watch_csv,|,설정.MOLIT_WATCHLIST.지역5)
+    로그.출력(실거래가 관심지역 시드 로딩 완료)
+  그외
+    로그.출력(실거래가 관심지역 시드 로딩 완료)
+}
 처리::TELEGRAM.텔레그램실거래가명령처리
 {
   만약에(참)
     함수.단어분리(molit_cmd_word_list,수신메시지.result[0].message.text)
     함수.단어합치기(cmd_rest,세션.리스트.molit_cmd_word_list,1)
     함수.저장(pending_reply_chat_id,수신메시지.result[0].message.chat.id)
+    처리.MOLIT명령분기
+}
+처리::TELEGRAM.MOLIT명령분기
+{
+  만약에(세션.cmd_rest === 지역추가)
+    처리.텔레그램MOLIT지역추가명령처리
+  그외그외(세션.cmd_rest === 지역삭제)
+    처리.텔레그램MOLIT지역삭제명령처리
+  그외그외(세션.cmd_rest === 지역조회)
+    처리.텔레그램MOLIT지역조회명령처리
+  그외
     처리.MOLIT명령파싱
+}
+처리::TELEGRAM.텔레그램MOLIT지역추가명령처리
+{
+  만약에(참)
+    함수.단어분리(molit_add_word_list,세션.cmd_rest)
+    함수.단어합치기(molit_target_name,세션.리스트.molit_add_word_list,1)
+    함수.저장(molit_lookup_name,세션.molit_target_name)
+    함수.저장(molit_lookup_mode,추가)
+    처리.MOLIT지역코드조회
+}
+처리::TELEGRAM.텔레그램MOLIT지역삭제명령처리
+{
+  만약에(참)
+    함수.단어분리(molit_del_word_list,세션.cmd_rest)
+    함수.단어합치기(molit_target_name,세션.리스트.molit_del_word_list,1)
+    함수.저장(molit_del_match_prefix,세션.molit_target_name)
+    함수.붙이기(molit_del_match_prefix,:)
+    함수.쪼개기(molit_watch_list,세션.molit_watch_csv,|)
+    함수.저장(molit_del_idx,0)
+    함수.저장(molit_del_found,0)
+    함수.저장(molit_new_csv,없음)
+    함수.저장(molit_new_found,0)
+    처리.MOLIT지역삭제순회
+}
+처리::MOLIT.MOLIT지역삭제순회
+{
+  만약에(세션.molit_del_idx >= 세션.리스트.molit_watch_list.SIZE)
+    처리.MOLIT지역삭제완료
+  그외
+    처리.MOLIT지역삭제항목검사
+}
+처리::MOLIT.MOLIT지역삭제항목검사
+{
+  만약에(세션.리스트.molit_watch_list[세션.molit_del_idx] === 세션.molit_del_match_prefix)
+    함수.더하기(molit_del_found,세션.molit_del_found,1)
+    함수.더하기(molit_del_idx,세션.molit_del_idx,1)
+    처리.MOLIT지역삭제순회
+  그외
+    처리.MOLIT지역삭제보존
+}
+처리::MOLIT.MOLIT지역삭제보존
+{
+  만약에(세션.molit_new_found == 0)
+    함수.저장(molit_new_csv,세션.리스트.molit_watch_list[세션.molit_del_idx])
+    함수.저장(molit_new_found,1)
+    함수.더하기(molit_del_idx,세션.molit_del_idx,1)
+    처리.MOLIT지역삭제순회
+  그외
+    함수.붙이기(molit_new_csv,세션.molit_ini_pipe,세션.리스트.molit_watch_list[세션.molit_del_idx])
+    함수.더하기(molit_del_idx,세션.molit_del_idx,1)
+    처리.MOLIT지역삭제순회
+}
+처리::MOLIT.MOLIT지역삭제완료
+{
+  만약에(세션.molit_del_found > 0)
+    함수.저장(molit_watch_csv,세션.molit_new_csv)
+    함수.저장(molit_ini_del_found,0)
+    처리.MOLIT지역ini삭제찾기1
+  그외
+    함수.저장(molit_reply_text,문장.MOLIT관심지역삭제실패문장)
+    전송.MOLIT응답전송
+}
+처리::MOLIT.MOLIT지역ini삭제찾기1
+{
+  만약에(설정.MOLIT_WATCHLIST.지역1 === 세션.molit_del_match_prefix) 그리고(세션.molit_ini_del_found != 1)
+    함수.저장(molit_ini_slot_key,지역1)
+    함수.설정저장(세션.molit_ini_category,세션.molit_ini_slot_key,세션.molit_ini_clear_value)
+    함수.저장(molit_ini_del_found,1)
+    처리.MOLIT지역ini삭제찾기2
+  그외
+    처리.MOLIT지역ini삭제찾기2
+}
+처리::MOLIT.MOLIT지역ini삭제찾기2
+{
+  만약에(설정.MOLIT_WATCHLIST.지역2 === 세션.molit_del_match_prefix) 그리고(세션.molit_ini_del_found != 1)
+    함수.저장(molit_ini_slot_key,지역2)
+    함수.설정저장(세션.molit_ini_category,세션.molit_ini_slot_key,세션.molit_ini_clear_value)
+    함수.저장(molit_ini_del_found,1)
+    처리.MOLIT지역ini삭제찾기3
+  그외
+    처리.MOLIT지역ini삭제찾기3
+}
+처리::MOLIT.MOLIT지역ini삭제찾기3
+{
+  만약에(설정.MOLIT_WATCHLIST.지역3 === 세션.molit_del_match_prefix) 그리고(세션.molit_ini_del_found != 1)
+    함수.저장(molit_ini_slot_key,지역3)
+    함수.설정저장(세션.molit_ini_category,세션.molit_ini_slot_key,세션.molit_ini_clear_value)
+    함수.저장(molit_ini_del_found,1)
+    처리.MOLIT지역ini삭제찾기4
+  그외
+    처리.MOLIT지역ini삭제찾기4
+}
+처리::MOLIT.MOLIT지역ini삭제찾기4
+{
+  만약에(설정.MOLIT_WATCHLIST.지역4 === 세션.molit_del_match_prefix) 그리고(세션.molit_ini_del_found != 1)
+    함수.저장(molit_ini_slot_key,지역4)
+    함수.설정저장(세션.molit_ini_category,세션.molit_ini_slot_key,세션.molit_ini_clear_value)
+    함수.저장(molit_ini_del_found,1)
+    처리.MOLIT지역ini삭제찾기5
+  그외
+    처리.MOLIT지역ini삭제찾기5
+}
+처리::MOLIT.MOLIT지역ini삭제찾기5
+{
+  만약에(설정.MOLIT_WATCHLIST.지역5 === 세션.molit_del_match_prefix) 그리고(세션.molit_ini_del_found != 1)
+    함수.저장(molit_ini_slot_key,지역5)
+    함수.설정저장(세션.molit_ini_category,세션.molit_ini_slot_key,세션.molit_ini_clear_value)
+    처리.MOLIT지역삭제응답
+  그외
+    처리.MOLIT지역삭제응답
+}
+처리::MOLIT.MOLIT지역삭제응답
+{
+  만약에(참)
+    함수.저장(molit_reply_text,문장.MOLIT관심지역삭제완료문장)
+    전송.MOLIT응답전송
+}
+처리::TELEGRAM.텔레그램MOLIT지역조회명령처리
+{
+  만약에(세션.molit_watch_csv == 없음)
+    함수.저장(molit_reply_text,문장.MOLIT관심지역빈목록문장)
+    전송.MOLIT응답전송
+  그외
+    함수.쪼개기(molit_list_watch,세션.molit_watch_csv,|)
+    함수.저장(molit_list_idx,0)
+    함수.저장(molit_list_lines,없음)
+    처리.MOLIT지역목록순회
+}
+처리::MOLIT.MOLIT지역목록순회
+{
+  만약에(세션.molit_list_idx >= 세션.리스트.molit_list_watch.SIZE)
+    함수.저장(molit_reply_text,문장.MOLIT관심지역목록문장)
+    전송.MOLIT응답전송
+  그외
+    함수.쪼개기(molit_list_parts,세션.리스트.molit_list_watch[세션.molit_list_idx],:)
+    처리.MOLIT지역목록라인추가
+}
+처리::MOLIT.MOLIT지역목록라인추가
+{
+  만약에(세션.molit_list_idx == 0)
+    함수.저장(molit_list_lines,문장.MOLIT지역목록라인문장)
+    함수.더하기(molit_list_idx,세션.molit_list_idx,1)
+    처리.MOLIT지역목록순회
+  그외
+    함수.붙이기(molit_list_lines,|,문장.MOLIT지역목록라인문장)
+    함수.더하기(molit_list_idx,세션.molit_list_idx,1)
+    처리.MOLIT지역목록순회
+}
+처리::MOLIT.MOLIT지역코드조회
+{
+  만약에(세션.molit_lookup_name == 종로구)
+    함수.저장(molit_lookup_code,11110)
+    함수.저장(molit_lookup_found,1)
+    처리.MOLIT지역코드조회완료
+  그외그외(세션.molit_lookup_name == 중구)
+    함수.저장(molit_lookup_code,11140)
+    함수.저장(molit_lookup_found,1)
+    처리.MOLIT지역코드조회완료
+  그외그외(세션.molit_lookup_name == 용산구)
+    함수.저장(molit_lookup_code,11170)
+    함수.저장(molit_lookup_found,1)
+    처리.MOLIT지역코드조회완료
+  그외그외(세션.molit_lookup_name == 성동구)
+    함수.저장(molit_lookup_code,11200)
+    함수.저장(molit_lookup_found,1)
+    처리.MOLIT지역코드조회완료
+  그외그외(세션.molit_lookup_name == 광진구)
+    함수.저장(molit_lookup_code,11215)
+    함수.저장(molit_lookup_found,1)
+    처리.MOLIT지역코드조회완료
+  그외그외(세션.molit_lookup_name == 동대문구)
+    함수.저장(molit_lookup_code,11230)
+    함수.저장(molit_lookup_found,1)
+    처리.MOLIT지역코드조회완료
+  그외그외(세션.molit_lookup_name == 중랑구)
+    함수.저장(molit_lookup_code,11260)
+    함수.저장(molit_lookup_found,1)
+    처리.MOLIT지역코드조회완료
+  그외그외(세션.molit_lookup_name == 성북구)
+    함수.저장(molit_lookup_code,11290)
+    함수.저장(molit_lookup_found,1)
+    처리.MOLIT지역코드조회완료
+  그외그외(세션.molit_lookup_name == 강북구)
+    함수.저장(molit_lookup_code,11305)
+    함수.저장(molit_lookup_found,1)
+    처리.MOLIT지역코드조회완료
+  그외그외(세션.molit_lookup_name == 도봉구)
+    함수.저장(molit_lookup_code,11320)
+    함수.저장(molit_lookup_found,1)
+    처리.MOLIT지역코드조회완료
+  그외그외(세션.molit_lookup_name == 노원구)
+    함수.저장(molit_lookup_code,11350)
+    함수.저장(molit_lookup_found,1)
+    처리.MOLIT지역코드조회완료
+  그외그외(세션.molit_lookup_name == 은평구)
+    함수.저장(molit_lookup_code,11380)
+    함수.저장(molit_lookup_found,1)
+    처리.MOLIT지역코드조회완료
+  그외그외(세션.molit_lookup_name == 서대문구)
+    함수.저장(molit_lookup_code,11410)
+    함수.저장(molit_lookup_found,1)
+    처리.MOLIT지역코드조회완료
+  그외그외(세션.molit_lookup_name == 마포구)
+    함수.저장(molit_lookup_code,11440)
+    함수.저장(molit_lookup_found,1)
+    처리.MOLIT지역코드조회완료
+  그외그외(세션.molit_lookup_name == 양천구)
+    함수.저장(molit_lookup_code,11470)
+    함수.저장(molit_lookup_found,1)
+    처리.MOLIT지역코드조회완료
+  그외그외(세션.molit_lookup_name == 강서구)
+    함수.저장(molit_lookup_code,11500)
+    함수.저장(molit_lookup_found,1)
+    처리.MOLIT지역코드조회완료
+  그외그외(세션.molit_lookup_name == 구로구)
+    함수.저장(molit_lookup_code,11530)
+    함수.저장(molit_lookup_found,1)
+    처리.MOLIT지역코드조회완료
+  그외그외(세션.molit_lookup_name == 금천구)
+    함수.저장(molit_lookup_code,11545)
+    함수.저장(molit_lookup_found,1)
+    처리.MOLIT지역코드조회완료
+  그외그외(세션.molit_lookup_name == 영등포구)
+    함수.저장(molit_lookup_code,11560)
+    함수.저장(molit_lookup_found,1)
+    처리.MOLIT지역코드조회완료
+  그외그외(세션.molit_lookup_name == 동작구)
+    함수.저장(molit_lookup_code,11590)
+    함수.저장(molit_lookup_found,1)
+    처리.MOLIT지역코드조회완료
+  그외그외(세션.molit_lookup_name == 관악구)
+    함수.저장(molit_lookup_code,11620)
+    함수.저장(molit_lookup_found,1)
+    처리.MOLIT지역코드조회완료
+  그외그외(세션.molit_lookup_name == 서초구)
+    함수.저장(molit_lookup_code,11650)
+    함수.저장(molit_lookup_found,1)
+    처리.MOLIT지역코드조회완료
+  그외그외(세션.molit_lookup_name == 강남구)
+    함수.저장(molit_lookup_code,11680)
+    함수.저장(molit_lookup_found,1)
+    처리.MOLIT지역코드조회완료
+  그외그외(세션.molit_lookup_name == 송파구)
+    함수.저장(molit_lookup_code,11710)
+    함수.저장(molit_lookup_found,1)
+    처리.MOLIT지역코드조회완료
+  그외그외(세션.molit_lookup_name == 강동구)
+    함수.저장(molit_lookup_code,11740)
+    함수.저장(molit_lookup_found,1)
+    처리.MOLIT지역코드조회완료
+  그외
+    함수.저장(molit_lookup_found,0)
+    처리.MOLIT지역코드조회완료
+}
+처리::MOLIT.MOLIT지역코드조회완료
+{
+  만약에(세션.molit_lookup_mode == 조회)
+    처리.MOLIT지역검증완료
+  그외
+    처리.MOLIT관심지역추가확정
+}
+처리::MOLIT.MOLIT지역검증완료
+{
+  만약에(세션.molit_lookup_found == 0)
+    함수.저장(molit_reply_text,문장.MOLIT지역미지원문장)
+    전송.MOLIT응답전송
+  그외
+    함수.저장(molit_region_name,세션.molit_lookup_name)
+    함수.저장(molit_region_code,세션.molit_lookup_code)
+    전송.MOLIT실거래가조회전송
+}
+처리::MOLIT.MOLIT관심지역추가확정
+{
+  만약에(세션.molit_lookup_found == 0)
+    함수.저장(molit_reply_text,문장.MOLIT지역미지원문장)
+    전송.MOLIT응답전송
+  그외
+    함수.저장(molit_resolved_code,세션.molit_lookup_code)
+    함수.저장(molit_ini_write_value,세션.molit_target_name)
+    함수.붙이기(molit_ini_write_value,세션.molit_ini_colon,세션.molit_resolved_code)
+    함수.저장(molit_ini_found,0)
+    처리.MOLIT관심지역ini빈슬롯찾기1
+}
+처리::MOLIT.MOLIT관심지역ini빈슬롯찾기1
+{
+  만약에(설정.MOLIT_WATCHLIST.지역1 == NULL)
+    함수.저장(molit_ini_slot_key,지역1)
+    함수.저장(molit_ini_found,1)
+    처리.MOLIT관심지역ini쓰기
+  그외그외(설정.MOLIT_WATCHLIST.지역1 == 없음)
+    함수.저장(molit_ini_slot_key,지역1)
+    함수.저장(molit_ini_found,1)
+    처리.MOLIT관심지역ini쓰기
+  그외
+    처리.MOLIT관심지역ini빈슬롯찾기2
+}
+처리::MOLIT.MOLIT관심지역ini빈슬롯찾기2
+{
+  만약에(설정.MOLIT_WATCHLIST.지역2 == NULL)
+    함수.저장(molit_ini_slot_key,지역2)
+    함수.저장(molit_ini_found,1)
+    처리.MOLIT관심지역ini쓰기
+  그외그외(설정.MOLIT_WATCHLIST.지역2 == 없음)
+    함수.저장(molit_ini_slot_key,지역2)
+    함수.저장(molit_ini_found,1)
+    처리.MOLIT관심지역ini쓰기
+  그외
+    처리.MOLIT관심지역ini빈슬롯찾기3
+}
+처리::MOLIT.MOLIT관심지역ini빈슬롯찾기3
+{
+  만약에(설정.MOLIT_WATCHLIST.지역3 == NULL)
+    함수.저장(molit_ini_slot_key,지역3)
+    함수.저장(molit_ini_found,1)
+    처리.MOLIT관심지역ini쓰기
+  그외그외(설정.MOLIT_WATCHLIST.지역3 == 없음)
+    함수.저장(molit_ini_slot_key,지역3)
+    함수.저장(molit_ini_found,1)
+    처리.MOLIT관심지역ini쓰기
+  그외
+    처리.MOLIT관심지역ini빈슬롯찾기4
+}
+처리::MOLIT.MOLIT관심지역ini빈슬롯찾기4
+{
+  만약에(설정.MOLIT_WATCHLIST.지역4 == NULL)
+    함수.저장(molit_ini_slot_key,지역4)
+    함수.저장(molit_ini_found,1)
+    처리.MOLIT관심지역ini쓰기
+  그외그외(설정.MOLIT_WATCHLIST.지역4 == 없음)
+    함수.저장(molit_ini_slot_key,지역4)
+    함수.저장(molit_ini_found,1)
+    처리.MOLIT관심지역ini쓰기
+  그외
+    처리.MOLIT관심지역ini빈슬롯찾기5
+}
+처리::MOLIT.MOLIT관심지역ini빈슬롯찾기5
+{
+  만약에(설정.MOLIT_WATCHLIST.지역5 == NULL)
+    함수.저장(molit_ini_slot_key,지역5)
+    함수.저장(molit_ini_found,1)
+    처리.MOLIT관심지역ini쓰기
+  그외그외(설정.MOLIT_WATCHLIST.지역5 == 없음)
+    함수.저장(molit_ini_slot_key,지역5)
+    함수.저장(molit_ini_found,1)
+    처리.MOLIT관심지역ini쓰기
+  그외
+    처리.MOLIT관심지역ini쓰기
+}
+처리::MOLIT.MOLIT관심지역ini쓰기
+{
+  만약에(세션.molit_ini_found == 1)
+    함수.설정저장(세션.molit_ini_category,세션.molit_ini_slot_key,세션.molit_ini_write_value)
+    처리.MOLIT관심지역추가세션갱신
+  그외
+    함수.저장(molit_reply_text,문장.MOLIT관심지역추가한도초과문장)
+    전송.MOLIT응답전송
+}
+처리::MOLIT.MOLIT관심지역추가세션갱신
+{
+  만약에(세션.molit_watch_csv == 없음)
+    함수.저장(molit_watch_csv,세션.molit_ini_write_value)
+    함수.저장(molit_reply_text,문장.MOLIT관심지역추가완료문장)
+    전송.MOLIT응답전송
+  그외
+    함수.붙이기(molit_watch_csv,세션.molit_ini_pipe,세션.molit_ini_write_value)
+    함수.저장(molit_reply_text,문장.MOLIT관심지역추가완료문장)
+    전송.MOLIT응답전송
 }
 처리::MOLIT.MOLIT명령파싱
 {
   만약에(세션.cmd_rest == NULL)
     함수.날짜(molit_deal_ymd,%Y%m)
+    함수.저장(molit_region_requested,0)
     처리.MOLIT월분해
   그외
     함수.단어분리(molit_arg_word_list,세션.cmd_rest)
@@ -3601,9 +4052,12 @@ $$$세션.keco_watch_alert_text$$$}
 {
   만약에(세션.리스트.molit_arg_word_list.SIZE == 1)
     함수.저장(molit_month_candidate,세션.리스트.molit_arg_word_list[0])
+    함수.저장(molit_region_requested,0)
     처리.MOLIT단어유효성검사
   그외그외(세션.리스트.molit_arg_word_list.SIZE == 2)
+    함수.저장(molit_region_candidate,세션.리스트.molit_arg_word_list[0])
     함수.저장(molit_month_candidate,세션.리스트.molit_arg_word_list[1])
+    함수.저장(molit_region_requested,1)
     처리.MOLIT단어유효성검사
   그외
     함수.저장(molit_reply_text,문장.MOLIT파싱실패문장)
@@ -3620,10 +4074,17 @@ $$$세션.keco_watch_alert_text$$$}
 }
 처리::MOLIT.MOLIT월분해
 {
-  만약에(참)
+  만약에(세션.molit_region_requested == 1)
+    함수.추출(molit_year,세션.molit_deal_ymd,0,4)
+    함수.추출(molit_month,세션.molit_deal_ymd,4,2)
+    함수.저장(molit_lookup_name,세션.molit_region_candidate)
+    함수.저장(molit_lookup_mode,조회)
+    처리.MOLIT지역코드조회
+  그외
     함수.추출(molit_year,세션.molit_deal_ymd,0,4)
     함수.추출(molit_month,세션.molit_deal_ymd,4,2)
     함수.저장(molit_region_name,설정.MOLIT.default_region_name)
+    함수.저장(molit_region_code,설정.MOLIT.default_region_code)
     전송.MOLIT실거래가조회전송
 }
 처리::MOLIT.MOLIT응답분기처리
@@ -3678,7 +4139,7 @@ $$$세션.keco_watch_alert_text$$$}
   전송메시지.주소.파라미터[0].key = serviceKey
   전송메시지.주소.파라미터[0].val = 설정.MOLIT.service_key
   전송메시지.주소.파라미터[1].key = LAWD_CD
-  전송메시지.주소.파라미터[1].val = 설정.MOLIT.default_region_code
+  전송메시지.주소.파라미터[1].val = 세션.molit_region_code
   전송메시지.주소.파라미터[2].key = DEAL_YMD
   전송메시지.주소.파라미터[2].val = 세션.molit_deal_ymd
   전송메시지.주소.파라미터[3].key = pageNo
@@ -3710,3 +4171,19 @@ $$$세션.keco_watch_alert_text$$$}
 {$$$세션.molit_region_name$$$ $$$세션.molit_year$$$년 $$$세션.molit_month$$$월에는 아파트 매매 거래 내역이 없습니다.}
 문장::TELEGRAM.MOLIT파싱실패문장
 {계약년월 형식을 이해하지 못했습니다. "실거래가" 또는 "실거래가 202410"처럼 말씀해주세요.}
+문장::TELEGRAM.MOLIT지역미지원문장
+{$$$세션.molit_lookup_name$$$은(는) 아직 지원하지 않는 지역입니다.}
+문장::TELEGRAM.MOLIT관심지역추가완료문장
+{$$$세션.molit_target_name$$$($$$세션.molit_resolved_code$$$)를 관심지역에 추가했습니다.}
+문장::TELEGRAM.MOLIT관심지역추가한도초과문장
+{이미 관심지역이 5개 등록되어 있어 더 추가할 수 없습니다. 기존 지역을 삭제한 후 다시 시도해주세요.}
+문장::TELEGRAM.MOLIT관심지역삭제완료문장
+{$$$세션.molit_target_name$$$을(를) 관심지역에서 삭제했습니다.}
+문장::TELEGRAM.MOLIT관심지역삭제실패문장
+{$$$세션.molit_target_name$$$은(는) 등록된 관심지역이 아닙니다.}
+문장::TELEGRAM.MOLIT관심지역빈목록문장
+{등록된 관심지역이 없습니다. "실거래가 지역추가 강남구"처럼 말씀해주세요.}
+문장::TELEGRAM.MOLIT관심지역목록문장
+{등록된 관심지역: $$$세션.molit_list_lines$$$}
+문장::MOLIT.MOLIT지역목록라인문장
+{$$$세션.리스트.molit_list_parts[0]$$$($$$세션.리스트.molit_list_parts[1]$$$)}
